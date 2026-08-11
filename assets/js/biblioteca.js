@@ -255,23 +255,44 @@ function pausar() {
   }
 }
 
-async function cargarLibro(origen) {
-  try {
-    estado.libro = typeof origen === 'string'
-      ? await (await fetch(origen)).json()
-      : (typeof origen.text === 'function' ? JSON.parse(await origen.text()) : origen);
+const SUPABASE_URL = 'https://rctenaewkoqhctynveo.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_NYlwHJJY_U7jS_2k4d7Q9g_NrSNzUTZ';
+const SUPABASE_BUCKET = 'Libros Privados';
+const SUPABASE_FILE = 'consejeria-biblica.json';
 
-    estado.nodos=construirNodos(estado.libro);
-    $('titulo-libro').textContent=estado.libro.titulo || 'Mi Biblioteca';
+const clienteSupabase = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY
+);
+
+async function cargarLibro() {
+  $('estado').textContent = 'Cargando biblioteca desde Supabase…';
+
+  try {
+    const { data, error } = await clienteSupabase.storage
+      .from(SUPABASE_BUCKET)
+      .download(SUPABASE_FILE);
+
+    if (error) throw error;
+    if (!data) throw new Error('Supabase no devolvió el archivo.');
+
+    estado.libro = JSON.parse(await data.text());
+    estado.nodos = construirNodos(estado.libro);
+
+    if (!estado.nodos.length) {
+      throw new Error('El JSON no contiene secciones para mostrar.');
+    }
+
+    $('titulo-libro').textContent = estado.libro.titulo || 'Mi Biblioteca';
     instalarEstiloResaltado();
     aplicarTamanio();
 
-    const ultimo=Number(localStorage.getItem('biblioteca-ultima-seccion') || 0);
-    abrirNodo(Math.min(ultimo, estado.nodos.length-1));
+    const ultimo = Number(localStorage.getItem('biblioteca-ultima-seccion') || 0);
+    abrirNodo(Math.min(Math.max(ultimo, 0), estado.nodos.length - 1));
   }
   catch (error) {
-    $('estado').textContent='No fue posible abrir el libro. Intenta seleccionar el archivo JSON.';
-    console.error(error);
+    $('estado').textContent = 'No fue posible cargar la biblioteca desde Supabase.';
+    console.error('Error al cargar el JSON desde Supabase:', error);
   }
 }
 
@@ -281,7 +302,6 @@ $('escuchar').onclick=escuchar; $('pausar').onclick=pausar; $('detener').onclick
 $('anterior').onclick=()=>abrirNodo(estado.actual-1); $('siguiente').onclick=()=>abrirNodo(estado.actual+1);
 $('abrir-indice').onclick=()=>$('panel-indice').classList.add('abierto');
 $('cerrar-indice').onclick=()=>$('panel-indice').classList.remove('abierto');
-$('archivo-json').onchange=(event)=>{ const file=event.target.files[0]; if (file) cargarLibro(file); };
 
 let eventoInstalacion;
 window.addEventListener('beforeinstallprompt', e => {
@@ -292,4 +312,6 @@ window.addEventListener('beforeinstallprompt', e => {
 $('instalar').onclick=async()=>{ await eventoInstalacion?.prompt(); $('instalar').hidden=true; };
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');
-cargarLibro('consejeria_pastoral_biblioteca.json');
+
+// Cargar automáticamente el libro almacenado en Supabase.
+cargarLibro();
