@@ -1,0 +1,9 @@
+{
+  "name": "Mi Biblioteca de Estudio",
+  "short_name": "Mi Biblioteca",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f7f4ed",
+  "theme_color": "#315c4b",
+  "lang": "es"
+}
