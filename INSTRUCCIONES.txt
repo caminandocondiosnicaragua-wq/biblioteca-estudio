@@ -1,0 +1,12 @@
+MI BIBLIOTECA DE ESTUDIO — LOGIN SUPABASE
+
+1. Abre supabase-config.js.
+2. Sustituye PEGA_AQUI_TU_PUBLISHABLE_KEY por tu Publishable key de Supabase.
+3. Debe comenzar con sb_publishable_.
+4. NO uses Secret Key ni service_role.
+5. Coloca login.html y supabase-config.js en la raíz del proyecto.
+6. Coloca auth.js dentro de assets/js/auth.js.
+
+Estos archivos preparan el inicio de sesión con Supabase Auth.
+Todavía NO modifican biblioteca.js. Después de probar el login,
+conectaremos la sesión con la biblioteca y el JSON privado.
