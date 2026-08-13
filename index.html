@@ -15,10 +15,16 @@
     <button id="abrir-indice" class="solo-movil" aria-label="Abrir índice">☰</button>
     <div>
       <p class="marca">MI BIBLIOTECA</p>
-      <h1 id="titulo-libro">Consejería Bíblica</h1>
+      <h1 id="titulo-libro">Mi Biblioteca</h1>
     </div>
-    <button id="instalar" class="boton secundario" hidden>Instalar</button>
+    <div class="acciones-superiores">
+      <button id="abrir-buscador" class="secundario">🔎 Buscar</button>
+      <button id="agregar-recurso">＋ Recurso</button>
+      <button id="instalar" class="secundario" hidden>Instalar</button>
+    </div>
   </header>
+
+  <div id="pestanas" class="pestanas" aria-label="Recursos abiertos"></div>
 
   <main class="aplicacion">
     <aside id="panel-indice" class="indice" aria-label="Índice del libro">
@@ -45,11 +51,42 @@
       <p id="estado" class="estado"></p>
       <article id="contenido" class="contenido"></article>
       <div class="navegacion">
-        <button id="anterior" class="boton secundario">← Anterior</button>
-        <button id="siguiente" class="boton">Siguiente →</button>
+        <button id="anterior" class="secundario">← Anterior</button>
+        <button id="siguiente">Siguiente →</button>
       </div>
     </section>
   </main>
+
+  <div id="modal-recursos" class="modal" hidden>
+    <div class="modal-caja" role="dialog" aria-modal="true" aria-labelledby="titulo-recursos">
+      <div class="modal-cabecera">
+        <div><p class="marca">MI BIBLIOTECA</p><h2 id="titulo-recursos">Agregar recurso</h2></div>
+        <button id="cerrar-recursos" class="secundario" aria-label="Cerrar">×</button>
+      </div>
+      <p class="modal-ayuda">Elige un libro, Biblia, diccionario o léxico. Se abrirá como una nueva pestaña de estudio.</p>
+      <div id="lista-recursos" class="lista-recursos"></div>
+    </div>
+  </div>
+
+  <div id="modal-busqueda" class="modal" hidden>
+    <div class="modal-caja modal-busqueda-caja" role="dialog" aria-modal="true" aria-labelledby="titulo-busqueda">
+      <div class="modal-cabecera">
+        <div><p class="marca">INVESTIGACIÓN</p><h2 id="titulo-busqueda">Buscar en la biblioteca</h2></div>
+        <button id="cerrar-busqueda" class="secundario" aria-label="Cerrar">×</button>
+      </div>
+      <div class="busqueda-controles">
+        <input id="campo-busqueda" type="search" placeholder="Palabra, frase, griego, español, Strong..." autocomplete="off">
+        <select id="modo-busqueda" aria-label="Alcance de búsqueda">
+          <option value="abiertos">En recursos abiertos</option>
+          <option value="toda">En toda la biblioteca</option>
+        </select>
+        <button id="ejecutar-busqueda">Buscar</button>
+      </div>
+      <p id="estado-busqueda" class="estado"></p>
+      <div id="resultados-busqueda" class="resultados-busqueda"></div>
+    </div>
+  </div>
+
   <script src="assets/js/biblioteca.js"></script>
 </body>
 </html>
