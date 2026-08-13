@@ -1,57 +1,82 @@
-// Mi Biblioteca de Estudio — autenticación con Supabase
+import { supabase } from "../../supabase-config.js";
 
-const formulario = document.getElementById("formulario-acceso");
-const correo = document.getElementById("correo");
-const contrasena = document.getElementById("contrasena");
-const boton = document.getElementById("boton-acceso");
-const mensaje = document.getElementById("mensaje-acceso");
+const $ = (id) => document.getElementById(id);
 
-function mostrarMensaje(texto, error = true) {
-  mensaje.textContent = texto;
-  mensaje.classList.toggle("error", error);
-  mensaje.classList.toggle("ok", !error);
-}
+const loginForm = $("loginForm");
+if (loginForm) {
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const mensaje = $("mensaje");
+    mensaje.textContent = "Entrando...";
 
-async function comprobarSesionExistente() {
-  const { data, error } = await supabaseClient.auth.getSession();
+    const { error } = await supabase.auth.signInWithPassword({
+      email: $("email").value.trim(),
+      password: $("password").value
+    });
 
-  if (error) {
-    console.error("Error al comprobar la sesión:", error);
-    return;
-  }
+    if (error) {
+      mensaje.textContent = "El correo o la contraseña no son correctos.";
+      console.error(error);
+      return;
+    }
 
-  if (data.session) window.location.href = "index.html";
-}
-
-formulario.addEventListener("submit", async (evento) => {
-  evento.preventDefault();
-
-  const email = correo.value.trim();
-  const password = contrasena.value;
-
-  if (!email || !password) {
-    mostrarMensaje("Escribe tu correo y contraseña.");
-    return;
-  }
-
-  boton.disabled = true;
-  boton.textContent = "Entrando…";
-
-  const { error } = await supabaseClient.auth.signInWithPassword({
-    email,
-    password
+    window.location.href = "index.html";
   });
+}
 
-  if (error) {
-    console.error("Error de inicio de sesión:", error);
-    mostrarMensaje("El correo o la contraseña no son correctos.");
-    boton.disabled = false;
-    boton.textContent = "Entrar";
-    return;
-  }
+const recoveryForm = $("recoveryForm");
+if (recoveryForm) {
+  recoveryForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const mensaje = $("mensaje");
+    mensaje.textContent = "Enviando enlace...";
 
-  mostrarMensaje("Acceso correcto. Abriendo tu biblioteca…", false);
-  window.location.href = "index.html";
-});
+    const redirectTo = new URL("update-password.html", window.location.href).href;
 
-comprobarSesionExistente();
+    const { error } = await supabase.auth.resetPasswordForEmail(
+      $("email").value.trim(),
+      { redirectTo }
+    );
+
+    if (error) {
+      mensaje.textContent = "No se pudo enviar el enlace. Revisa el correo.";
+      console.error(error);
+      return;
+    }
+
+    mensaje.style.color = "#286451";
+    mensaje.textContent = "Listo. Revisa tu correo para cambiar la contraseña.";
+  });
+}
+
+const updateForm = $("updateForm");
+if (updateForm) {
+  updateForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const mensaje = $("mensaje");
+
+    if ($("password").value !== $("password2").value) {
+      mensaje.textContent = "Las contraseñas no coinciden.";
+      return;
+    }
+
+    mensaje.textContent = "Guardando...";
+
+    const { error } = await supabase.auth.updateUser({
+      password: $("password").value
+    });
+
+    if (error) {
+      mensaje.textContent = "No se pudo cambiar la contraseña.";
+      console.error(error);
+      return;
+    }
+
+    mensaje.style.color = "#286451";
+    mensaje.textContent = "Contraseña actualizada. Ya puedes iniciar sesión.";
+
+    setTimeout(() => {
+      window.location.href = "login.html";
+    }, 1800);
+  });
+}
