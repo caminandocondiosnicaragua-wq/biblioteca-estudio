@@ -28,8 +28,6 @@ function construirNodos(libro) {
   return salida;
 }
 
-/* Resaltado sincronizado con SpeechSynthesis.
-   Cada palabra conserva su posición dentro del texto que se está leyendo. */
 function crearPalabrasMarcadas(texto, inicio) {
   const fragment = document.createDocumentFragment();
   const partes = String(texto || '').split(/(\s+)/);
@@ -37,7 +35,6 @@ function crearPalabrasMarcadas(texto, inicio) {
 
   partes.forEach(parte => {
     if (!parte) return;
-
     if (/^\s+$/.test(parte)) {
       fragment.append(document.createTextNode(parte));
     } else {
@@ -49,10 +46,8 @@ function crearPalabrasMarcadas(texto, inicio) {
       estado.mapaVoz.push({ inicio: offset, fin: offset + parte.length, elemento: span });
       fragment.append(span);
     }
-
     offset += parte.length;
   });
-
   return fragment;
 }
 
@@ -64,13 +59,11 @@ function crearFragmentos(block, inicio) {
   partes.forEach(parte => {
     let item = crearPalabrasMarcadas(parte.texto || '', offset);
     offset += (parte.texto || '').length;
-
     if (parte.subrayado) { const e=document.createElement('u'); e.append(item); item=e; }
     if (parte.cursiva) { const e=document.createElement('em'); e.append(item); item=e; }
     if (parte.negrita) { const e=document.createElement('strong'); e.append(item); item=e; }
     fragment.append(item);
   });
-
   return fragment;
 }
 
@@ -115,14 +108,8 @@ function limpiarResaltado() {
 
 function resaltarPorPosicion(posicion) {
   if (!Number.isFinite(posicion)) return;
-
   let encontrado = estado.mapaVoz.find(item => posicion >= item.inicio && posicion < item.fin);
-
-  // Algunos navegadores notifican el límite de una palabra.
-  if (!encontrado) {
-    encontrado = estado.mapaVoz.find(item => item.inicio > posicion);
-  }
-
+  if (!encontrado) encontrado = estado.mapaVoz.find(item => item.inicio > posicion);
   if (!encontrado || encontrado.elemento === estado.palabraActiva) return;
 
   limpiarResaltado();
@@ -131,14 +118,11 @@ function resaltarPorPosicion(posicion) {
 
   const rect = encontrado.elemento.getBoundingClientRect();
   const fueraDeVista = rect.top < 90 || rect.bottom > window.innerHeight - 70;
-  if (fueraDeVista) {
-    encontrado.elemento.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
+  if (fueraDeVista) encontrado.elemento.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function instalarEstiloResaltado() {
   if (document.getElementById('estilo-voz-sincronizada')) return;
-
   const estilo = document.createElement('style');
   estilo.id = 'estilo-voz-sincronizada';
   estilo.textContent = `
@@ -158,7 +142,8 @@ function instalarEstiloResaltado() {
 function renderizarIndice() {
   const lista=$('lista-indice'); lista.replaceChildren();
   estado.nodos.forEach((nodo, i) => {
-    const boton=document.createElement('button'); boton.className=`indice-item ${nodo.tipo === 'subseccion' ? 'sub' : ''} ${i===estado.actual ? 'activo' : ''}`;
+    const boton=document.createElement('button');
+    boton.className=`indice-item ${nodo.tipo === 'subseccion' ? 'sub' : ''} ${i===estado.actual ? 'activo' : ''}`;
     boton.textContent=nodo.titulo; boton.onclick=()=>abrirNodo(i); lista.append(boton);
   });
 }
@@ -175,7 +160,6 @@ function abrirNodo(indice) {
   h2.append(crearPalabrasMarcadas(nodo.titulo, 0));
   area.append(h2);
 
-  // textoActual() une título + bloques con ". ", por eso el primer bloque comienza aquí.
   const inicioContenido = nodo.titulo.length + 2;
   renderizarBloques(nodo.contenido, area, inicioContenido);
 
@@ -217,7 +201,6 @@ function detenerAudio() {
 
 function escuchar() {
   detenerAudio();
-
   if (!('speechSynthesis' in window)) {
     $('estado').textContent='Este navegador no ofrece lectura en voz alta.';
     return;
@@ -226,15 +209,9 @@ function escuchar() {
   estado.voz=new SpeechSynthesisUtterance(textoActual());
   estado.voz.lang='es-ES';
   estado.voz.rate=.92;
-
-  // Chrome/Edge suelen proporcionar charIndex en onboundary.
-  // Si el navegador no lo soporta, el audio seguirá funcionando sin resaltado.
   estado.voz.onboundary = (event) => {
-    if (typeof event.charIndex === 'number') {
-      resaltarPorPosicion(event.charIndex);
-    }
+    if (typeof event.charIndex === 'number') resaltarPorPosicion(event.charIndex);
   };
-
   estado.voz.onend=detenerAudio;
   estado.voz.onerror=detenerAudio;
 
@@ -266,9 +243,19 @@ const clienteSupabase = window.supabase.createClient(
 );
 
 async function cargarLibro() {
-  $('estado').textContent = 'Cargando biblioteca desde Supabase…';
+  $('estado').textContent = 'Comprobando sesión…';
 
   try {
+    const { data: sesion, error: errorSesion } = await clienteSupabase.auth.getSession();
+    if (errorSesion) throw errorSesion;
+
+    if (!sesion.session) {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    $('estado').textContent = 'Cargando biblioteca desde Supabase…';
+
     const { data, error } = await clienteSupabase.storage
       .from(SUPABASE_BUCKET)
       .download(SUPABASE_FILE);
@@ -279,9 +266,7 @@ async function cargarLibro() {
     estado.libro = JSON.parse(await data.text());
     estado.nodos = construirNodos(estado.libro);
 
-    if (!estado.nodos.length) {
-      throw new Error('El JSON no contiene secciones para mostrar.');
-    }
+    if (!estado.nodos.length) throw new Error('El JSON no contiene secciones para mostrar.');
 
     $('titulo-libro').textContent = estado.libro.titulo || 'Mi Biblioteca';
     instalarEstiloResaltado();
@@ -289,8 +274,7 @@ async function cargarLibro() {
 
     const ultimo = Number(localStorage.getItem('biblioteca-ultima-seccion') || 0);
     abrirNodo(Math.min(Math.max(ultimo, 0), estado.nodos.length - 1));
-  }
-  catch (error) {
+  } catch (error) {
     $('estado').textContent = 'No fue posible cargar la biblioteca desde Supabase.';
     console.error('Error al cargar el JSON desde Supabase:', error);
   }
@@ -313,5 +297,4 @@ $('instalar').onclick=async()=>{ await eventoInstalacion?.prompt(); $('instalar'
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');
 
-// Cargar automáticamente el libro almacenado en Supabase.
 cargarLibro();

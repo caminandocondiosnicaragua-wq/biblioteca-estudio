@@ -20,7 +20,7 @@ async function comprobarSesionExistente() {
     return;
   }
 
-  if (data.session) window.location.href = "biblioteca.html";
+  if (data.session) window.location.href = "index.html";
 }
 
 formulario.addEventListener("submit", async (evento) => {
@@ -51,7 +51,7 @@ formulario.addEventListener("submit", async (evento) => {
   }
 
   mostrarMensaje("Acceso correcto. Abriendo tu biblioteca…", false);
-  window.location.href = "biblioteca.html";
+  window.location.href = "index.html";
 });
 
 comprobarSesionExistente();
