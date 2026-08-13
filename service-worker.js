@@ -1,47 +1,5 @@
-const CACHE = 'biblioteca-estudio-v5';
-
-const APP = [
-  './',
-  './index.html',
-  './login.html',
-  './forgot-password.html',
-  './update-password.html',
-  './supabase-config.js',
-  './assets/css/biblioteca.css',
-  './assets/js/auth.js',
-  './assets/js/biblioteca.js',
-  './manifest.webmanifest',
-  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
-];
-
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE)
-      .then(cache => cache.addAll(APP))
-      .catch(error => console.warn('No se pudo precargar todo el caché:', error))
-  );
-  self.skipWaiting();
-});
-
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(
-        keys.filter(k => k !== CACHE).map(k => caches.delete(k))
-      ))
-      .then(() => self.clients.claim())
-  );
-});
-
-self.addEventListener('fetch', event => {
-  const url = new URL(event.request.url);
-
-  // NUNCA interceptar las peticiones a Supabase.
-  if (url.origin.includes('supabase.co')) return;
-
-  // Servir desde caché si existe; los recursos de la aplicación
-  // se actualizan cuando cambia la versión del caché.
-  event.respondWith(
-    caches.match(event.request).then(cached => cached || fetch(event.request))
-  );
-});
+const CACHE = 'biblioteca-estudio-v6';
+const APP = ['./','./index.html','./login.html','./forgot-password.html','./update-password.html','./supabase-config.js','./assets/css/biblioteca.css','./assets/js/auth.js','./assets/js/biblioteca.js','./manifest.webmanifest','https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'];
+self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(c=>c.addAll(APP)).catch(e=>console.warn('No se pudo precargar todo el caché:',e)));self.skipWaiting();});
+self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
+self.addEventListener('fetch',event=>{const url=new URL(event.request.url);if(url.origin.includes('supabase.co'))return;event.respondWith(caches.match(event.request).then(cached=>cached||fetch(event.request)));});
