@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#315c4b">
+  <meta name="description" content="Biblioteca personal de estudio sin conexión.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="assets/css/biblioteca.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <title>Mi Biblioteca de Estudio</title>
+</head>
+<body>
+  <header class="barra-superior">
+    <button id="abrir-indice" class="solo-movil" aria-label="Abrir índice">☰</button>
+    <div>
+      <p class="marca">MI BIBLIOTECA</p>
+      <h1 id="titulo-libro">Consejería Bíblica</h1>
+    </div>
+    <button id="instalar" class="boton secundario" hidden>Instalar</button>
+  </header>
+
+  <main class="aplicacion">
+    <aside id="panel-indice" class="indice" aria-label="Índice del libro">
+      <div class="indice-cabecera">
+        <h2>Índice</h2>
+        <button id="cerrar-indice" class="solo-movil" aria-label="Cerrar índice">×</button>
+      </div>
+      <nav id="lista-indice"></nav>
+    </aside>
+
+    <section class="lector" aria-live="polite">
+      <div class="herramientas">
+        <div class="tamano" aria-label="Tamaño de letra">
+          <span>Texto</span>
+          <button id="disminuir" aria-label="Disminuir tamaño de letra">A−</button>
+          <button id="aumentar" aria-label="Aumentar tamaño de letra">A+</button>
+        </div>
+        <div class="audio">
+          <button id="escuchar">▶ Escuchar</button>
+          <button id="pausar" disabled>⏸ Pausar</button>
+          <button id="detener" disabled>■ Detener</button>
+        </div>
+      </div>
+      <p id="estado" class="estado"></p>
+      <article id="contenido" class="contenido"></article>
+      <div class="navegacion">
+        <button id="anterior" class="boton secundario">← Anterior</button>
+        <button id="siguiente" class="boton">Siguiente →</button>
+      </div>
+    </section>
+  </main>
+  <script src="assets/js/biblioteca.js"></script>
+</body>
+</html>
