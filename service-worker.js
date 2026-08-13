@@ -1,9 +1,11 @@
-const CACHE = 'biblioteca-estudio-v4';
+const CACHE = 'biblioteca-estudio-v5';
 
 const APP = [
   './',
   './index.html',
   './login.html',
+  './forgot-password.html',
+  './update-password.html',
   './supabase-config.js',
   './assets/css/biblioteca.css',
   './assets/js/auth.js',
@@ -37,7 +39,8 @@ self.addEventListener('fetch', event => {
   // NUNCA interceptar las peticiones a Supabase.
   if (url.origin.includes('supabase.co')) return;
 
-  // Para la aplicación local, usar caché y actualizar recursos cuando corresponda.
+  // Servir desde caché si existe; los recursos de la aplicación
+  // se actualizan cuando cambia la versión del caché.
   event.respondWith(
     caches.match(event.request).then(cached => cached || fetch(event.request))
   );
