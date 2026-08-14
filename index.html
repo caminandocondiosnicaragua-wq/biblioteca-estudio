@@ -87,8 +87,139 @@
     </div>
   </div>
 
-  <!-- Adaptador adicional: se carga antes del lector y solo actúa sobre JSON bíblicos compatibles. -->
+  <!-- Adaptador: mantiene intactos los JSON originales. -->
   <script src="assets/js/adaptadores-json.js"></script>
+
+  <!-- FASE 1: navegación bíblica y búsqueda directa de referencia. -->
+  <script>
+  (function () {
+    const $ = id => document.getElementById(id);
+    function normalizar(valor) {
+      return String(valor || '').toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+    }
+    function obtenerCapitulo(texto) {
+      const m = String(texto || '').trim().match(/^(.*?)\s+(\d+)$/);
+      return m ? { libro: m[1].trim(), capitulo: Number(m[2]) } : null;
+    }
+    function esIndiceBiblico() {
+      const lista = $('lista-indice');
+      if (!lista) return false;
+      const botones = [...lista.querySelectorAll(':scope > button.indice-item')];
+      return botones.length > 0 && botones.every(btn => obtenerCapitulo(btn.textContent));
+    }
+    function prepararReferenciasOriginales() {
+      document.querySelectorAll('#lista-indice button.indice-item').forEach(btn => {
+        if (btn.dataset.referencia) return;
+        const datos = obtenerCapitulo(btn.textContent);
+        if (datos) btn.dataset.referencia = `${datos.libro} ${datos.capitulo}`;
+      });
+    }
+    function organizarIndice() {
+      const lista = $('lista-indice');
+      if (!lista || lista.dataset.fase1Organizado === '1') return;
+      const botones = [...lista.children].filter(el => el.matches('button.indice-item'));
+      if (!botones.length) return;
+      const capitulos = botones.map(btn => ({ btn, datos: obtenerCapitulo(btn.textContent) }));
+      if (capitulos.some(x => !x.datos)) return;
+      const grupos = new Map();
+      capitulos.forEach(({ btn, datos }) => {
+        const clave = normalizar(datos.libro);
+        if (!grupos.has(clave)) grupos.set(clave, { nombre: datos.libro, botones: [] });
+        grupos.get(clave).botones.push(btn);
+      });
+      lista.replaceChildren();
+      grupos.forEach(grupo => {
+        const detalles = document.createElement('details');
+        detalles.className = 'indice-libro';
+        detalles.open = false;
+        const resumen = document.createElement('summary');
+        resumen.textContent = grupo.nombre;
+        detalles.append(resumen);
+        const capitulosDiv = document.createElement('div');
+        capitulosDiv.className = 'indice-capitulos';
+        grupo.botones.forEach(btn => {
+          const datos = obtenerCapitulo(btn.textContent);
+          btn.dataset.referencia = `${datos.libro} ${datos.capitulo}`;
+          btn.textContent = `Capítulo ${datos.capitulo}`;
+          capitulosDiv.append(btn);
+        });
+        detalles.append(capitulosDiv);
+        lista.append(detalles);
+      });
+      lista.dataset.fase1Organizado = '1';
+    }
+    function crearBuscadorReferencia() {
+      const herramientas = document.querySelector('.lector .herramientas');
+      if (!herramientas || $('buscador-referencia')) return;
+      const barra = document.createElement('div');
+      barra.id = 'buscador-referencia';
+      barra.className = 'referencia-biblica';
+      barra.innerHTML = '<label for="campo-referencia">Ir a referencia bíblica</label><div class="referencia-controles"><input id="campo-referencia" type="search" placeholder="Génesis 1:1" autocomplete="off"><button id="ir-referencia" type="button">Ir</button></div><small>Ejemplo: Génesis 1 · Juan 3:16</small>';
+      herramientas.insertAdjacentElement('afterend', barra);
+      const ejecutar = () => irAReferencia($('campo-referencia')?.value || '');
+      $('ir-referencia').addEventListener('click', ejecutar);
+      $('campo-referencia').addEventListener('keydown', e => { if (e.key === 'Enter') ejecutar(); });
+    }
+    function encontrarBoton(libro, capitulo) {
+      const buscado = normalizar(`${libro} ${capitulo}`);
+      return [...document.querySelectorAll('#lista-indice button.indice-item')].find(btn => normalizar(btn.dataset.referencia || btn.textContent) === buscado) || null;
+    }
+    function mostrarEstadoReferencia(mensaje) {
+      const estado = $('estado');
+      if (estado) estado.textContent = mensaje;
+    }
+    function irAReferencia(referencia) {
+      const valor = String(referencia || '').trim();
+      if (!valor) { $('campo-referencia')?.focus(); return; }
+      const m = valor.match(/^(.+?)\s+(\d+)(?::(\d+))?$/);
+      if (!m) { mostrarEstadoReferencia('Escribe una referencia como Génesis 1 o Génesis 1:1.'); return; }
+      const libro = m[1].trim(), capitulo = Number(m[2]), versiculo = m[3] ? Number(m[3]) : null;
+      const boton = encontrarBoton(libro, capitulo);
+      if (!boton) {
+        const nLibro = normalizar(libro);
+        const candidatos = [...document.querySelectorAll('#lista-indice button.indice-item')].filter(btn => {
+          const datos = obtenerCapitulo(btn.dataset.referencia || btn.textContent);
+          return datos && datos.capitulo === capitulo && normalizar(datos.libro).startsWith(nLibro);
+        });
+        if (candidatos.length === 1) return irAReferenciaDesdeBoton(candidatos[0], versiculo);
+        mostrarEstadoReferencia(`No encontré ${libro} ${capitulo} en la Biblia abierta.`);
+        return;
+      }
+      irAReferenciaDesdeBoton(boton, versiculo);
+    }
+    function irAReferenciaDesdeBoton(boton, versiculo) {
+      boton.click();
+      if (!versiculo) return;
+      setTimeout(() => {
+        const patron = new RegExp(`^${versiculo}(?:\\s|$)`);
+        const parrafo = [...document.querySelectorAll('#contenido p')].find(p => patron.test(p.textContent.trim()));
+        if (parrafo) {
+          parrafo.classList.add('versiculo-destacado');
+          parrafo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setTimeout(() => parrafo.classList.remove('versiculo-destacado'), 2200);
+        }
+      }, 120);
+    }
+    function observarIndice() {
+      const lista = $('lista-indice');
+      if (!lista || lista.dataset.fase1Observado === '1') return;
+      lista.dataset.fase1Observado = '1';
+      const observador = new MutationObserver(() => {
+        if (!esIndiceBiblico()) return;
+        prepararReferenciasOriginales();
+        organizarIndice();
+      });
+      observador.observe(lista, { childList: true, subtree: true });
+    }
+    function instalar() {
+      crearBuscadorReferencia();
+      observarIndice();
+      if (esIndiceBiblico()) { prepararReferenciasOriginales(); organizarIndice(); }
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', instalar, { once: true });
+    else instalar();
+  })();
+  </script>
   <script src="assets/js/biblioteca.js"></script>
 </body>
 </html>
