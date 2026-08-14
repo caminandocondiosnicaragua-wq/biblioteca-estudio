@@ -41,18 +41,112 @@
   <script>
   (function(){
     const $=id=>document.getElementById(id);
-    function normalizar(v){return String(v||'').toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();}
-    function obtenerCapitulo(t){const m=String(t||'').trim().match(/^(.*?)\s+(\d+)$/);return m?{libro:m[1].trim(),capitulo:Number(m[2])}:null;}
-    function esIndiceBiblico(){const l=$('lista-indice');if(!l)return false;const b=[...l.querySelectorAll(':scope > button.indice-item')];return b.length>0&&b.every(x=>obtenerCapitulo(x.dataset.referencia||x.textContent));}
-    function preparar(){document.querySelectorAll('#lista-indice button.indice-item').forEach(b=>{if(!b.dataset.referencia){const d=obtenerCapitulo(b.textContent);if(d)b.dataset.referencia=`${d.libro} ${d.capitulo}`;}});}
-    function organizar(){const l=$('lista-indice');if(!l)return;const b=[...l.children].filter(x=>x.matches('button.indice-item'));if(!b.length)return;const datos=b.map(x=>({btn:x,d:obtenerCapitulo(x.dataset.referencia||x.textContent)}));if(datos.some(x=>!x.d))return;const grupos=new Map();datos.forEach(x=>{const k=normalizar(x.d.libro);if(!grupos.has(k))grupos.set(k,{nombre:x.d.libro,botones:[]});grupos.get(k).botones.push(x.btn);});l.replaceChildren();grupos.forEach(g=>{const det=document.createElement('details');det.className='indice-libro';det.open=false;const sum=document.createElement('summary');sum.textContent=g.nombre;det.append(sum);const caps=document.createElement('div');caps.className='indice-capitulos';g.botones.forEach(btn=>{const d=obtenerCapitulo(btn.dataset.referencia||btn.textContent);btn.dataset.referencia=`${d.libro} ${d.capitulo}`;btn.textContent=`Capítulo ${d.capitulo}`;caps.append(btn);});det.append(caps);l.append(det);});}
-    function crearBuscador(){const h=document.querySelector('.lector .herramientas');if(!h||$('buscador-referencia'))return;const b=document.createElement('div');b.id='buscador-referencia';b.className='referencia-biblica';b.innerHTML='<label for="campo-referencia">Ir a referencia bíblica</label><div class="referencia-controles"><input id="campo-referencia" type="search" placeholder="Génesis 1:1" autocomplete="off"><button id="ir-referencia" type="button">Ir</button></div><small>Ejemplo: Génesis 1 · Juan 3:16</small>';h.insertAdjacentElement('afterend',b);const ejecutar=()=>irAReferencia($('campo-referencia')?.value||'');$('ir-referencia').addEventListener('click',ejecutar);$('campo-referencia').addEventListener('keydown',e=>{if(e.key==='Enter')ejecutar();});}
-    function encontrar(libro,cap){const q=normalizar(`${libro} ${cap}`);return [...document.querySelectorAll('#lista-indice button.indice-item')].find(b=>normalizar(b.dataset.referencia||b.textContent)===q)||null;}
-    function mensaje(t){if($('estado'))$('estado').textContent=t;}
-    function irAReferencia(ref){const v=String(ref||'').trim();if(!v){$('campo-referencia')?.focus();return;}const m=v.match(/^(.+?)\s+(\d+)(?::(\d+))?$/);if(!m){mensaje('Escribe una referencia como Génesis 1 o Génesis 1:1.');return;}const libro=m[1].trim(),cap=Number(m[2]),vers=m[3]?Number(m[3]):null;let btn=encontrar(libro,cap);if(!btn){const q=normalizar(libro);const c=[...document.querySelectorAll('#lista-indice button.indice-item')].filter(x=>{const d=obtenerCapitulo(x.dataset.referencia||x.textContent);return d&&d.capitulo===cap&&normalizar(d.libro).startsWith(q);});if(c.length===1)btn=c[0];}if(!btn){mensaje(`No encontré ${libro} ${cap} en la Biblia abierta.`);return;}btn.click();if(vers)setTimeout(()=>{const re=new RegExp(`^${vers}(?:\\s|$)`);const p=[...document.querySelectorAll('#contenido p')].find(x=>re.test(x.textContent.trim()));if(p){p.classList.add('versiculo-destacado');p.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>p.classList.remove('versiculo-destacado'),2200);}},120);}
-    function observar(){const l=$('lista-indice');if(!l||l.dataset.fase1Observado==='1')return;l.dataset.fase1Observado='1';new MutationObserver(()=>{if(esIndiceBiblico())organizar();}).observe(l,{childList:true,subtree:true});}
-    function instalar(){crearBuscador();observar();if(esIndiceBiblico())organizar();}
-    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',instalar,{once:true});else instalar();
+    const normalizar=v=>String(v||'').toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();
+    const obtenerCapitulo=t=>{const m=String(t||'').trim().match(/^(.*?)\s+(\d+)$/);return m?{libro:m[1].trim(),capitulo:Number(m[2])}:null;};
+
+    function esBibliaActiva(){
+      const titulo=normalizar($('titulo-libro')?.textContent||'');
+      return /biblia|rvr|reina valera|dios habla hoy|nvi|strong/.test(titulo);
+    }
+
+    function prepararIndice(){
+      document.querySelectorAll('#lista-indice button.indice-item').forEach(b=>{
+        if(b.dataset.referencia)return;
+        const d=obtenerCapitulo(b.textContent);
+        if(d)b.dataset.referencia=`${d.libro} ${d.capitulo}`;
+      });
+    }
+
+    function esIndiceBiblico(){
+      const l=$('lista-indice');
+      if(!l)return false;
+      const b=[...l.querySelectorAll('button.indice-item')];
+      return b.length>0&&b.some(x=>obtenerCapitulo(x.dataset.referencia||x.textContent));
+    }
+
+    function organizar(){
+      const l=$('lista-indice');
+      if(!l||l.dataset.fase1Organizado==='1'||!esBibliaActiva())return;
+      const b=[...l.children].filter(x=>x.matches('button.indice-item'));
+      if(!b.length)return;
+      const datos=b.map(x=>({btn:x,d:obtenerCapitulo(x.dataset.referencia||x.textContent)}));
+      if(datos.some(x=>!x.d))return;
+      const grupos=new Map();
+      datos.forEach(x=>{const k=normalizar(x.d.libro);if(!grupos.has(k))grupos.set(k,{nombre:x.d.libro,botones:[]});grupos.get(k).botones.push(x.btn);});
+      l.replaceChildren();
+      grupos.forEach(g=>{
+        const det=document.createElement('details');det.className='indice-libro';det.open=false;
+        const sum=document.createElement('summary');sum.textContent=g.nombre;det.append(sum);
+        const caps=document.createElement('div');caps.className='indice-capitulos';
+        g.botones.forEach(btn=>{const d=obtenerCapitulo(btn.dataset.referencia||btn.textContent);btn.dataset.referencia=`${d.libro} ${d.capitulo}`;btn.textContent=`Capítulo ${d.capitulo}`;caps.append(btn);});
+        det.append(caps);l.append(det);
+      });
+      l.dataset.fase1Organizado='1';
+    }
+
+    function crearBuscadorIndice(){
+      const indice=$('panel-indice');
+      if(!indice||$('buscador-indice-biblico')||!esBibliaActiva())return;
+      const caja=document.createElement('div');
+      caja.id='buscador-indice-biblico';
+      caja.className='indice-busqueda activo';
+      caja.innerHTML='<label for="campo-indice-biblico">Ir a pasaje bíblico</label><div class="indice-busqueda-controles"><input id="campo-indice-biblico" type="search" placeholder="Génesis 1:1 o Mateo 5" autocomplete="off"><button id="ir-indice-biblico" type="button">Ir</button></div><small>Busca el libro y capítulo directamente en el índice.</small><p id="estado-indice-biblico" class="indice-busqueda-estado"></p>';
+      indice.querySelector('.indice-cabecera').insertAdjacentElement('afterend',caja);
+      const ejecutar=()=>irAPasaje($('campo-indice-biblico')?.value||'');
+      $('ir-indice-biblico').addEventListener('click',ejecutar);
+      $('campo-indice-biblico').addEventListener('keydown',e=>{if(e.key==='Enter')ejecutar();});
+    }
+
+    function encontrar(libro,capitulo){
+      const q=normalizar(`${libro} ${capitulo}`);
+      const botones=[...document.querySelectorAll('#lista-indice button.indice-item')];
+      return botones.find(b=>normalizar(b.dataset.referencia||b.textContent)===q)||null;
+    }
+
+    function irAPasaje(valor){
+      const v=String(valor||'').trim();
+      const estado=$('estado-indice-biblico');
+      if(estado)estado.textContent='';
+      if(!v){$('campo-indice-biblico')?.focus();return;}
+      const m=v.match(/^(.+?)\s+(\d+)(?::(\d+))?$/);
+      if(!m){if(estado)estado.textContent='Escribe, por ejemplo: Mateo 5 o Juan 3:16.';return;}
+      const libro=m[1].trim(),capitulo=Number(m[2]),versiculo=m[3]?Number(m[3]):null;
+      const boton=encontrar(libro,capitulo);
+      if(!boton){if(estado)estado.textContent=`No encontré ${libro} ${capitulo} en el índice de la Biblia abierta.`;return;}
+      const detalle=boton.closest('details');
+      if(detalle)detalle.open=true;
+      boton.click();
+      if(versiculo)setTimeout(()=>{
+        const patron=new RegExp(`^${versiculo}(?:\\s|$)`);
+        const p=[...document.querySelectorAll('#contenido p')].find(x=>patron.test(x.textContent.trim()));
+        if(p){p.classList.add('versiculo-destacado');p.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>p.classList.remove('versiculo-destacado'),2200);}
+      },160);
+    }
+
+    function actualizarInterfaz(){
+      const existente=$('buscador-indice-biblico');
+      if(esBibliaActiva()){
+        prepararIndice();
+        organizar();
+        if(!existente)crearBuscadorIndice();
+      }else if(existente){existente.remove();}
+    }
+
+    function observar(){
+      const l=$('lista-indice');
+      const t=$('titulo-libro');
+      if(l&&!l.dataset.fase1Observado){
+        l.dataset.fase1Observado='1';
+        new MutationObserver(()=>setTimeout(actualizarInterfaz,0)).observe(l,{childList:true,subtree:true});
+      }
+      if(t&&!t.dataset.fase1TituloObservado){
+        t.dataset.fase1TituloObservado='1';
+        new MutationObserver(actualizarInterfaz).observe(t,{childList:true,characterData:true,subtree:true});
+      }
+      actualizarInterfaz();
+    }
+
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',observar,{once:true});else observar();
   })();
   </script>
   <script src="assets/js/biblioteca.js"></script>
