@@ -81,7 +81,9 @@
       if(!cuerpo) return;
       const n=obtenerNumero(item,i+1);
       const ref=`${nombreLibro} ${numeroCapitulo}:${n}`;
-      const prefijo=`${ref} `;
+      // En la lectura bíblica mostramos solo el número del versículo.
+      // La referencia completa se conserva en los metadatos para búsquedas futuras.
+      const prefijo=`${n} `;
       bloques.push({tipo:'parrafo',texto:prefijo+cuerpo,referencia:ref,versiculo:Number(n)||n,formato_fragmentos:[{texto:prefijo,negrita:true},{texto:cuerpo}]});
     });
     return bloques;
