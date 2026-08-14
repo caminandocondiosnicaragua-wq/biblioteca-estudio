@@ -100,7 +100,7 @@
         const items=primero(ch,['items','verses','versiculos','content','contenido'],[]);
         const bloques=bloquesBiblia(items,nombre,numero);
         if(!bloques.length) return;
-        const tituloCap=limpio(tituloDe(ch)||primero(ch,['current'],{})?.human)||`${nombre} ${numero}`;
+        const tituloCap=`${nombre} ${numero}`;
         secciones.push({titulo:tituloCap,contenido:bloques,subsecciones:[],tipo:'biblia-capitulo',biblia:true,libroId:book.id||book.book_usfm||nombre,libroNombre:nombre,capitulo:Number(numero)||numero,referencia:`${nombre} ${numero}`});
       });
     });
@@ -129,7 +129,6 @@
     const bloques=[];
     const palabra=limpio(primero(entrada,['entrada','lemma','lema','term','termino','término','word','palabra','greek','griego','entry','name','nombre'],''))||`Entrada ${indice+1}`;
     agregarBloque(bloques,palabra,true);
-
     agregarBloque(bloques,`Forma léxica: ${textoDiccionario(primero(entrada,['forma_lexica','forma','form','forms','formas'],''))}`);
     agregarBloque(bloques,`Tipo: ${textoDiccionario(primero(entrada,['tipo','type'],''))}`);
     agregarBloque(bloques,`Gramática: ${textoDiccionario(primero(entrada,['gramatica','gramática','grammar','part_of_speech','pos'],''))}`);
@@ -144,14 +143,12 @@
     agregarBloque(bloques,`Variante textual: ${textoDiccionario(primero(entrada,['variante_textual','textual_variant'],''))}`);
     agregarBloque(bloques,`Nota: ${textoDiccionario(primero(entrada,['nota','note'],''))}`);
     agregarBloque(bloques,`Texto original: ${textoDiccionario(primero(entrada,['texto_original','original_text'],''))}`);
-
     return bloques;
   }
 
   function adaptarDiccionario(v){
     const entradas=aLista(primero(v,['entradas','entries','lemmas','terminos','terms']));
     const grupos=new Map();
-
     entradas.forEach((entrada,i)=>{
       if(!objeto(entrada)) return;
       const palabra=limpio(primero(entrada,['entrada','lemma','lema','term','termino','término','word','palabra','greek','griego','entry','name','nombre'],''))||`Entrada ${i+1}`;
@@ -159,17 +156,13 @@
       if(!grupos.has(letra)) grupos.set(letra,[]);
       grupos.get(letra).push({entrada,palabra,i});
     });
-
     const secciones=[];
     [...grupos.entries()].sort((a,b)=>a[0].localeCompare(b[0],'es')).forEach(([letra,lista])=>{
       lista.sort((a,b)=>a.palabra.localeCompare(b.palabra,'es'));
       const contenido=[];
-      lista.forEach(item=>{
-        bloquesEntrada(item.entrada,item.i).forEach(b=>contenido.push(b));
-      });
+      lista.forEach(item=>{bloquesEntrada(item.entrada,item.i).forEach(b=>contenido.push(b));});
       if(contenido.length) secciones.push({titulo:letra,contenido,subsecciones:[],tipo:'diccionario-letra',diccionario:true});
     });
-
     return {titulo:limpio(tituloDe(v)||'Diccionario')||'Diccionario',secciones};
   }
 
