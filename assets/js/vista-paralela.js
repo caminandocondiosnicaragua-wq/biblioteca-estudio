@@ -1,7 +1,7 @@
 /*
- * VISTA NORMAL / PARALELA — FASE 1
- * La vista se controla desde el menú principal.
- * Los JSON y el índice bíblico no se modifican.
+ * VISTA NORMAL / PARALELA
+ * El selector de vista permanece en la barra principal.
+ * Los recursos se agregan desde el boton + Recurso de la barra principal.
  */
 (function () {
   const $ = id => document.getElementById(id);
@@ -22,10 +22,9 @@
       body.modo-paralela .lector{max-width:none;width:100%;margin:0;padding:1rem 1.25rem 2rem}
       body.modo-paralela .herramientas{max-width:1500px;margin:0 auto .8rem}
       body.modo-paralela .estado{max-width:1500px;margin:.4rem auto}
-      body.modo-paralela .selector-vista-principal{display:none}
-      .barra-paralela{display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;max-width:1500px;margin:0 auto 1rem;background:#fff;border:1px solid #d7ddd7;border-radius:10px;padding:.65rem .8rem;font-family:Arial,sans-serif}
+      body.modo-paralela .selector-vista-principal{display:flex}
+      .barra-paralela{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;max-width:1500px;margin:0 auto 1rem;background:#fff;border:1px solid #d7ddd7;border-radius:10px;padding:.65rem .8rem;font-family:Arial,sans-serif}
       .barra-paralela .referencia{font-size:.82rem;color:#51635a}
-      .agregar-panel{background:#315c4b;color:#fff}
       .paneles-paralelos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;max-width:1500px;margin:0 auto}
       .panel-paralelo{min-width:0;background:#fff;border:1px solid #d7ddd7;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px #0000000d}
       .cabecera-panel{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.7rem .9rem;background:#f0f4f1;border-bottom:1px solid #d7ddd7;font-family:Arial,sans-serif;position:sticky;top:0;z-index:2}
@@ -64,14 +63,13 @@
     const barra = document.createElement('div');
     barra.id = 'barra-paralela';
     barra.className = 'barra-paralela';
-    barra.innerHTML = '<span class="referencia" id="referencia-paralela">Recursos en paralelo</span><button id="agregar-panel-paralelo" class="agregar-panel" type="button">＋ Agregar recurso</button>';
+    barra.innerHTML = '<span class="referencia" id="referencia-paralela">Recursos en paralelo</span>';
     herramientas.insertAdjacentElement('afterend', barra);
 
     const panelesEl = document.createElement('div');
     panelesEl.id = 'paneles-paralelos';
     panelesEl.className = 'paneles-paralelos';
     barra.insertAdjacentElement('afterend', panelesEl);
-    $('agregar-panel-paralelo').onclick = mostrarSelectorRecursos;
   }
 
   function cambiarModo(nuevo) {
@@ -102,8 +100,6 @@
     if (barra) barra.hidden = false;
     if (panelesEl) panelesEl.hidden = false;
 
-    /* Al entrar en paralelo empezamos únicamente con el recurso que se está leyendo.
-       No arrastramos automáticamente todas las pestañas abiertas. */
     const actual = estado.recursos.get(estado.activa);
     paneles = actual ? [actual.id] : [];
     renderizarPaneles();
@@ -169,13 +165,13 @@
     renderizarPaneles();
   }
 
-  async function mostrarSelectorRecursos() {
+  async function agregarRecursoDesdeMenu() {
     const disponibles = await listarRecursos();
     const disponiblesFiltrados = disponibles.filter(m => !paneles.includes(m.id));
     const modal = document.createElement('div');
     modal.className = 'modal';
     modal.id = 'modal-agregar-panel';
-    modal.innerHTML = '<div class="modal-caja"><div class="modal-cabecera"><div><p class="marca">VISTA PARALELA</p><h2>Agregar recurso</h2></div><button class="secundario" id="cerrar-agregar-panel" type="button">×</button></div><p class="modal-ayuda">Puedes abrir aquí una Biblia, libro, diccionario, concordancia, griego, hebreo u otro recurso disponible.</p><div id="opciones-paneles" class="lista-recursos"></div></div>';
+    modal.innerHTML = '<div class="modal-caja"><div class="modal-cabecera"><div><p class="marca">VISTA PARALELA</p><h2>Agregar recurso</h2></div><button class="secundario" id="cerrar-agregar-panel" type="button">×</button></div><p class="modal-ayuda">Selecciona la Biblia, libro, diccionario o léxico que quieres comparar en paralelo.</p><div id="opciones-paneles" class="lista-recursos"></div></div>';
     document.body.append(modal);
     const lista = modal.querySelector('#opciones-paneles');
     if (!disponiblesFiltrados.length) lista.textContent = 'No hay otros recursos disponibles para agregar.';
@@ -204,6 +200,17 @@
     });
     modal.querySelector('#cerrar-agregar-panel').onclick = () => modal.remove();
     modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+  }
+
+  function engancharMenuPrincipal() {
+    const boton = $('agregar-recurso');
+    if (!boton || boton.dataset.vistaParalela) return;
+    boton.dataset.vistaParalela = '1';
+    boton.addEventListener('click', () => {
+      if (modo === 'paralela') {
+        agregarRecursoDesdeMenu();
+      }
+    }, true);
   }
 
   function sincronizarConReferencia() {
@@ -236,9 +243,9 @@
     estilos();
     crearSelectorPrincipal();
     crearAreaParalela();
+    engancharMenuPrincipal();
     const barra = $('barra-paralela');
     if (barra) barra.hidden = true;
-    observarCambios();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar, { once: true });
