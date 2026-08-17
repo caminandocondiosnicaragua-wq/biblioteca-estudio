@@ -206,10 +206,11 @@
     const boton = $('agregar-recurso');
     if (!boton || boton.dataset.vistaParalela) return;
     boton.dataset.vistaParalela = '1';
-    boton.addEventListener('click', () => {
-      if (modo === 'paralela') {
-        agregarRecursoDesdeMenu();
-      }
+    boton.addEventListener('click', (e) => {
+      if (modo !== 'paralela') return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      agregarRecursoDesdeMenu();
     }, true);
   }
 
