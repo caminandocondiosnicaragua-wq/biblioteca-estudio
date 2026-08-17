@@ -17,6 +17,7 @@
     <div class="acciones-superiores">
       <button id="abrir-buscador" class="secundario">🔎 Buscar</button>
       <button id="agregar-recurso">＋ Recurso</button>
+      <button id="cerrar-sesion" class="secundario">↪ Cerrar sesión</button>
       <button id="instalar" class="secundario" hidden>Instalar</button>
     </div>
   </header>
@@ -57,6 +58,26 @@
     function observar(){const lista=$('lista-indice'),titulo=$('titulo-libro');if(lista&&!lista.dataset.indiceBiblicoObservado){lista.dataset.indiceBiblicoObservado='1';new MutationObserver(()=>setTimeout(()=>{if(!lista.querySelector('.indice-libro'))actualizar();},0)).observe(lista,{childList:true,subtree:true});}if(titulo&&!titulo.dataset.tituloBiblicoObservado){titulo.dataset.tituloBiblicoObservado='1';new MutationObserver(()=>setTimeout(actualizar,0)).observe(titulo,{childList:true,characterData:true,subtree:true});}actualizar();}
     if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',observar,{once:true});else observar();
   })();
+  </script>
+  <script>
+    (function(){
+      const boton=document.getElementById('cerrar-sesion');
+      if(!boton) return;
+      boton.addEventListener('click',async()=>{
+        boton.disabled=true;
+        boton.textContent='Saliendo…';
+        try{
+          const {error}=await clienteSupabase.auth.signOut();
+          if(error) throw error;
+          window.location.href='login.html';
+        }catch(error){
+          console.error('Cerrar sesión:',error);
+          boton.disabled=false;
+          boton.textContent='↪ Cerrar sesión';
+          alert('No se pudo cerrar la sesión. Inténtalo nuevamente.');
+        }
+      });
+    })();
   </script>
 </body>
 </html>
