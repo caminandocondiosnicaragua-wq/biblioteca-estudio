@@ -62,7 +62,7 @@
     function separarCapitulo(titulo){const m=String(titulo||'').trim().match(/^(.+?)\s+(\d+)$/);return m?{libro:m[1].trim(),capitulo:Number(m[2])}:null;}
     function datosBiblia(){const botones=[...document.querySelectorAll('#lista-indice button.indice-item')];const datos=botones.map(b=>separarCapitulo(b.textContent)).filter(Boolean);return datos.length>=3?datos:null;}
     function obtenerLibros(){const lista=$('lista-indice'),recurso=datosBiblia();if(!lista||!recurso)return[];const botones=[...lista.querySelectorAll('button.indice-item')],mapa=new Map();botones.forEach((b,index)=>{const d=separarCapitulo(b.textContent);if(!d)return;const clave=normalizar(d.libro);if(!mapa.has(clave))mapa.set(clave,{nombre:d.libro,capitulos:[]});mapa.get(clave).capitulos.push({numero:d.capitulo,boton:b,indiceOriginal:index});});return[...mapa.values()];}
-    function instalarBuscador(){const caja=$('buscador-libros-biblico');if(!caja||!datosBiblia())return; caja.hidden=false; const campo=$('campo-libro-biblico'); const boton=$('buscar-cita-biblica'); if(caja.dataset.instalado)return; caja.dataset.instalado='1'; const ejecutar=()=>buscarReferencia(campo?.value||''); boton?.addEventListener('click',ejecutar); campo?.addEventListener('keydown',e=>{if(e.key==='Enter')ejecutar();}); campo?.addEventListener('input',()=>filtrarLibros(campo.value));}
+    function instalarBuscador(){const caja=$('buscador-libros-biblico');if(!caja||!datosBiblia())return;caja.hidden=false;const campo=$('campo-libro-biblico'),boton=$('buscar-cita-biblica');if(caja.dataset.instalado)return;caja.dataset.instalado='1';const ejecutar=()=>buscarReferencia(campo?.value||'');boton?.addEventListener('click',ejecutar);campo?.addEventListener('keydown',e=>{if(e.key==='Enter')ejecutar();});campo?.addEventListener('input',()=>filtrarLibros(campo.value));}
     function filtrarLibros(valor){const q=normalizar(valor),lista=$('lista-indice');if(!lista)return;lista.querySelectorAll('.indice-libro').forEach(det=>{const nombre=normalizar(det.dataset.libro||'');det.hidden=Boolean(q&&!nombre.includes(q));if(q&&nombre.includes(q))det.open=true;});}
     function construirIndiceBiblico(){if(!datosBiblia())return;const lista=$('lista-indice');if(!lista||lista.querySelector('.indice-libro'))return;const libros=obtenerLibros();lista.replaceChildren();libros.forEach(libro=>{const detalles=document.createElement('details');detalles.className='indice-libro';detalles.dataset.libro=libro.nombre;const resumen=document.createElement('summary');resumen.textContent=libro.nombre;detalles.append(resumen);const capitulos=document.createElement('div');capitulos.className='indice-capitulos';libro.capitulos.forEach(cap=>{const botonOriginal=cap.boton;const boton=document.createElement('button');boton.type='button';boton.className='indice-item';boton.textContent=String(cap.numero);boton.title=botonOriginal.title||`${libro.nombre} ${cap.numero}`;boton.onclick=()=>botonOriginal.click();capitulos.append(boton);});detalles.append(capitulos);lista.append(detalles);});}
     function localizarCapitulo(libro,capitulo){const botones=[...document.querySelectorAll('#lista-indice .indice-libro')];for(const det of botones){if(normalizar(det.dataset.libro)!==normalizar(libro))continue;const boton=[...det.querySelectorAll('.indice-item')].find(b=>Number(b.textContent)===Number(capitulo));if(boton)return boton;}return null;}
@@ -76,23 +76,9 @@
   <script>
     (function(){
       const boton=document.getElementById('cerrar-sesion');
-      if(!boton) return;
-      boton.addEventListener('click',async()=>{
-        boton.disabled=true;
-        boton.textContent='Saliendo…';
-        try{
-          const {error}=await clienteSupabase.auth.signOut();
-          if(error) throw error;
-          window.location.href='login.html';
-        }catch(error){
-          console.error('Cerrar sesión:',error);
-          boton.disabled=false;
-          boton.textContent='↪ Cerrar sesión';
-          alert('No se pudo cerrar la sesión. Inténtalo nuevamente.');
-        }
-      });
+      if(!boton)return;
+      boton.addEventListener('click',async()=>{boton.disabled=true;boton.textContent='Saliendo…';try{const {error}=await clienteSupabase.auth.signOut();if(error)throw error;window.location.href='login.html';}catch(error){console.error('Cerrar sesión:',error);boton.disabled=false;boton.textContent='↪ Cerrar sesión';alert('No se pudo cerrar la sesión. Inténtalo nuevamente.');}});
     })();
   </script>
-  <script src="assets/js/biblioteca-ajustes.js?v=20260817-1"></script>
 </body>
 </html>
