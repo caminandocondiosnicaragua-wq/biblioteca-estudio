@@ -69,9 +69,7 @@
     const acciones = document.querySelector('.acciones-superiores');
     if (!acciones) return;
     if (!$('selector-vista-principal')) {
-      const caja = document.createElement('div');
-      caja.id='selector-vista-principal';
-      caja.className='selector-vista-principal';
+      const caja = document.createElement('div'); caja.id='selector-vista-principal'; caja.className='selector-vista-principal';
       caja.innerHTML='<span class="etiqueta">Vista</span><button id="vista-normal" class="boton-vista-principal activo" type="button">Normal</button><button id="vista-paralela" class="boton-vista-principal" type="button">Paralela</button>';
       acciones.insertBefore(caja, acciones.firstChild);
     }
@@ -170,6 +168,11 @@
 
   function observarCambios(){const originalAbrir=window.abrirNodo;if(typeof originalAbrir==='function'&&!window.__abrirNodoParalelo){window.abrirNodo=function(indice){originalAbrir(indice);if(modo==='paralela')sincronizarConReferencia();};window.__abrirNodoParalelo=true;}}
 
-  function iniciar(){estilos();crearSelectorPrincipal();crearAreaParalela();engancharMenuPrincipal();const barra=$('barra-paralela');if(barra)barra.hidden=true;observarCambios();}
+  function cargarNavegacionBiblica(){
+    if(document.querySelector('script[data-navegacion-biblica]'))return;
+    const s=document.createElement('script');s.src='assets/js/biblia-navegacion.js?v=20260817-1';s.dataset.navegacionBiblica='1';document.body.appendChild(s);
+  }
+
+  function iniciar(){estilos();crearSelectorPrincipal();crearAreaParalela();engancharMenuPrincipal();const barra=$('barra-paralela');if(barra)barra.hidden=true;observarCambios();cargarNavegacionBiblica();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',iniciar,{once:true});else iniciar();
 })();
