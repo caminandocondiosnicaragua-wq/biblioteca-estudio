@@ -50,13 +50,32 @@
     document.head.appendChild(s);
   }
 
+  function conectarBotonesVista() {
+    const normal = $('vista-normal');
+    const paralela = $('vista-paralela');
+    if (normal && !normal.dataset.vistaConectada) {
+      normal.dataset.vistaConectada = '1';
+      normal.type = 'button';
+      normal.addEventListener('click', () => cambiarModo('normal'));
+    }
+    if (paralela && !paralela.dataset.vistaConectada) {
+      paralela.dataset.vistaConectada = '1';
+      paralela.type = 'button';
+      paralela.addEventListener('click', () => cambiarModo('paralela'));
+    }
+  }
+
   function crearSelectorPrincipal() {
     const acciones = document.querySelector('.acciones-superiores');
-    if (!acciones || $('selector-vista-principal')) return;
-    const caja = document.createElement('div'); caja.id='selector-vista-principal'; caja.className='selector-vista-principal';
-    caja.innerHTML='<span class="etiqueta">Vista</span><button id="vista-normal" class="boton-vista-principal activo" type="button">Normal</button><button id="vista-paralela" class="boton-vista-principal" type="button">Paralela</button>';
-    acciones.insertBefore(caja, acciones.firstChild);
-    $('vista-normal').onclick=()=>cambiarModo('normal'); $('vista-paralela').onclick=()=>cambiarModo('paralela');
+    if (!acciones) return;
+    if (!$('selector-vista-principal')) {
+      const caja = document.createElement('div');
+      caja.id='selector-vista-principal';
+      caja.className='selector-vista-principal';
+      caja.innerHTML='<span class="etiqueta">Vista</span><button id="vista-normal" class="boton-vista-principal activo" type="button">Normal</button><button id="vista-paralela" class="boton-vista-principal" type="button">Paralela</button>';
+      acciones.insertBefore(caja, acciones.firstChild);
+    }
+    conectarBotonesVista();
   }
 
   function crearAreaParalela(){
