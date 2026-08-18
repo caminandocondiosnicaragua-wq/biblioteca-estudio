@@ -54,7 +54,7 @@
   <div id="modal-busqueda" class="modal" hidden><div class="modal-caja modal-busqueda-caja" role="dialog" aria-modal="true" aria-labelledby="titulo-busqueda"><div class="modal-cabecera"><div><p class="marca">INVESTIGACIÓN</p><h2 id="titulo-busqueda">Buscar en la biblioteca</h2></div><button id="cerrar-busqueda" class="secundario" aria-label="Cerrar">×</button></div><div class="busqueda-controles"><input id="campo-busqueda" type="search" placeholder="Palabra, frase, griego, español, Strong..." autocomplete="off"><select id="modo-busqueda" aria-label="Alcance de búsqueda"><option value="abiertos">En recursos abiertos</option><option value="toda">En toda la biblioteca</option></select><button id="ejecutar-busqueda">Buscar</button></div><p id="estado-busqueda" class="estado"></p><div id="resultados-busqueda" class="resultados-busqueda"></div></div></div>
   <script src="assets/js/adaptadores-json.js"></script>
   <script src="assets/js/biblioteca.js"></script>
-  <script src="assets/js/vista-paralela.js"></script>
+  <script src="assets/js/vista-paralela.js?v=20260817-3"></script>
   <script>
   (function(){
     const $=id=>document.getElementById(id);
@@ -80,5 +80,6 @@
       boton.addEventListener('click',async()=>{boton.disabled=true;boton.textContent='Saliendo…';try{const {error}=await clienteSupabase.auth.signOut();if(error)throw error;window.location.href='login.html';}catch(error){console.error('Cerrar sesión:',error);boton.disabled=false;boton.textContent='↪ Cerrar sesión';alert('No se pudo cerrar la sesión. Inténtalo nuevamente.');}});
     })();
   </script>
+  <script src="assets/js/biblioteca-ajustes.js?v=20260817-3"></script>
 </body>
 </html>
