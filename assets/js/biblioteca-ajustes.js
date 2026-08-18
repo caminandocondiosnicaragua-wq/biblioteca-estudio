@@ -1,6 +1,6 @@
 /* AJUSTES DE BIBLIOTECA
  * Este archivo se ocupa solamente del buscador bíblico y del buscador de recursos en modo NORMAL.
- * La vista PARALELA tiene un único controlador en vista-paralela.js.
+ * La vista PARALELA conserva su controlador existente.
  */
 (function(){
   const $=id=>document.getElementById(id);
@@ -69,6 +69,11 @@
     campo.addEventListener('input',filtrar);campo.addEventListener('keydown',e=>{if(e.key==='Enter')ejecutar();});boton.addEventListener('click',ejecutar);
   }
 
-  function iniciar(){estilo();conectarRecursoNormal();asegurarBuscadorBiblico();}
+  function cargarMejoras(){
+    if(document.querySelector('script[data-biblioteca-mejoras]'))return;
+    const s=document.createElement('script');s.src='assets/js/biblioteca-mejoras.js?v=20260818-2';s.dataset.bibliotecaMejoras='1';document.body.appendChild(s);
+  }
+
+  function iniciar(){estilo();conectarRecursoNormal();asegurarBuscadorBiblico();cargarMejoras();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',iniciar,{once:true});else iniciar();
 })();
