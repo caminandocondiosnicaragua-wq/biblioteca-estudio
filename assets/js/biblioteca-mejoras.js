@@ -13,17 +13,12 @@
     if($('mejoras-estilo'))return;
     const s=document.createElement('style');s.id='mejoras-estilo';
     s.textContent=`
-      /* NORMAL: índice y lector se desplazan por separado. El índice queda siempre visible. */
       body:not(.modo-paralela) .aplicacion{height:calc(100vh - 116px);min-height:0}
       body:not(.modo-paralela) .indice{height:100%;min-height:0;position:sticky;top:0;overflow-y:auto;overflow-x:hidden;align-self:stretch}
       body:not(.modo-paralela) .lector{height:100%;overflow-y:auto;overflow-x:hidden}
       body:not(.modo-paralela) #navegacion-paralela-fija{display:none!important}
       body:not(.modo-paralela) #navegacion-biblica-paralela{display:none!important}
-
-      /* CONTROLES DE LECTURA: permanecen visibles mientras se recorre el contenido. */
       .lector .herramientas{position:sticky!important;top:0;z-index:100;background:#f8f5ef!important;padding:.6rem .4rem!important;border-bottom:1px solid #d7ddd7;box-shadow:0 2px 8px #00000014}
-
-      /* PARALELO: lector completo, sin índice lateral, con controles limpios y fijos. */
       body.modo-paralela .aplicacion{height:calc(100vh - 116px);min-height:0;display:block!important}
       body.modo-paralela .lector{height:100%;max-width:none!important;width:100%!important;margin:0!important;padding:0 1.25rem 2rem!important;overflow-y:auto;overflow-x:hidden}
       body.modo-paralela .lector .herramientas{position:sticky!important;top:0;z-index:120;max-width:1600px;margin:0 auto;padding:.7rem .45rem!important;background:#f8f5ef!important}
@@ -32,26 +27,10 @@
       #navegacion-paralela-fija input{width:100%;min-width:0;padding:.48rem .6rem;border:1px solid #cfd8d2;border-radius:7px;background:#fff;color:#1d2a25}
       #navegacion-paralela-fija button{white-space:nowrap;padding:.48rem .68rem}
       #estado-paralela-fija{grid-column:1/-1;margin:0;color:#718078;font-size:.72rem;min-height:1em}
-
-      /* Evita la antigua barra duplicada aunque llegue desde un recurso en caché. */
       #navegacion-biblica-paralela{display:none!important}
-
       .versiculo-destacado{background:#f4d35e!important;border-radius:4px;box-shadow:0 0 0 2px #f4d35e}
-      @media(max-width:850px){
-        body.modo-paralela #navegacion-paralela-fija{grid-template-columns:auto 1fr auto auto;}
-        body.modo-paralela #navegacion-paralela-fija input{grid-column:2/-1}
-      }
-      @media(max-width:700px){
-        body:not(.modo-paralela) .aplicacion{height:calc(100vh - 116px)}
-        body:not(.modo-paralela) .indice{height:calc(100vh - 116px)}
-        body:not(.modo-paralela) .lector{height:100%}
-        body.modo-paralela .lector{padding:0 .7rem 1.5rem!important}
-        body.modo-paralela .lector .herramientas{top:0}
-        body.modo-paralela #navegacion-paralela-fija{top:92px;grid-template-columns:1fr 1fr;}
-        body.modo-paralela #navegacion-paralela-fija .etiqueta{grid-column:1/-1}
-        body.modo-paralela #navegacion-paralela-fija input{grid-column:1/-1}
-        body.modo-paralela #navegacion-paralela-fija button{width:100%}
-      }
+      @media(max-width:850px){body.modo-paralela #navegacion-paralela-fija{grid-template-columns:auto 1fr auto auto;}body.modo-paralela #navegacion-paralela-fija input{grid-column:2/-1}}
+      @media(max-width:700px){body:not(.modo-paralela) .aplicacion{height:calc(100vh - 116px)}body:not(.modo-paralela) .indice{height:calc(100vh - 116px)}body:not(.modo-paralela) .lector{height:100%}body.modo-paralela .lector{padding:0 .7rem 1.5rem!important}body.modo-paralela .lector .herramientas{top:0}body.modo-paralela #navegacion-paralela-fija{top:92px;grid-template-columns:1fr 1fr;}body.modo-paralela #navegacion-paralela-fija .etiqueta{grid-column:1/-1}body.modo-paralela #navegacion-paralela-fija input{grid-column:1/-1}body.modo-paralela #navegacion-paralela-fija button{width:100%}}
     `;
     document.head.appendChild(s);
   }
@@ -67,16 +46,13 @@
     if(msg)msg.textContent=`Mostrando ${r.nodos[i].titulo}.`;
     return true;
   }
-
   function interceptarNormal(){
     const input=$('campo-libro-biblico'),boton=$('buscar-cita-biblica');
     if(!input||input.dataset.mejorado)return;
-    input.dataset.mejorado='1';
-    input.placeholder='Ej.: Juan 3:16 · 2 Sam 1 · Gén 1';
+    input.dataset.mejorado='1';input.placeholder='Ej.: Juan 3:16 · 2 Sam 1 · Gén 1';
     input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();e.stopImmediatePropagation();normalFlexible(input.value);}},true);
     boton?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();normalFlexible(input.value);},true);
   }
-
   function quitarBarraCita(){const x=$('navegacion-biblica-paralela');if(x)x.remove();}
   function paneles(){return [...document.querySelectorAll('#paneles-paralelos .panel-paralelo')];}
   function recursoPanel(panel){const nombre=norm(panel?.querySelector('.cabecera-panel strong')?.textContent||'');return [...estado.recursos.values()].find(r=>norm(r.titulo)===nombre);}
@@ -84,33 +60,19 @@
   function actualizarReferencia(){const ps=paneles(),r=recursoPanel(ps[0]),ref=$('referencia-paralela');if(ref)ref.textContent=r?`Referencia: ${r.nodos?.[r.actual]?.titulo||''} · ${ps.length}/4 recursos`:'';}
   function buscarParalela(valor){const c=parse(valor),msg=$('estado-paralela-fija');if(!c){if(msg)msg.textContent='Ejemplo: Juan 3:16 o 2 Sam 1.';return;}const ps=paneles();let n=0;ps.forEach(p=>{const r=recursoPanel(p);if(!esBiblia(r))return;const i=buscarNodo(r,c);if(i<0)return;r.actual=i;pintarPanel(p,r);n++;setTimeout(()=>resaltar(p.querySelector('.contenido-panel'),c.vers),80);});if(msg)msg.textContent=n?`Mostrando ${valor} en ${n} recurso${n===1?'':'s'} bíblico${n===1?'':'s'}.`:`No encontré ${valor} en las Biblias abiertas.`;actualizarReferencia();}
   function mover(delta){const ps=paneles();ps.forEach(p=>{const r=recursoPanel(p);if(!r||!esBiblia(r))return;r.actual=Math.max(0,Math.min(r.nodos.length-1,r.actual+delta));pintarPanel(p,r);});const r=recursoPanel(ps[0]);if(r&&$('campo-paralela-fija'))$('campo-paralela-fija').value=r.nodos?.[r.actual]?.titulo||'';actualizarReferencia();}
-
   function crearBarraParalela(){
-    const herramientas=document.querySelector('.lector .herramientas');
-    if(!herramientas||$('navegacion-paralela-fija'))return;
+    const herramientas=document.querySelector('.lector .herramientas');if(!herramientas||$('navegacion-paralela-fija'))return;
     const b=document.createElement('div');b.id='navegacion-paralela-fija';b.hidden=true;
     b.innerHTML='<span class="etiqueta">Capítulo</span><input id="campo-paralela-fija" type="search" placeholder="Ej.: Juan 3:16 · 2 Sam 1" autocomplete="off"><button id="anterior-paralela-fija" type="button">← Anterior</button><button id="ir-paralela-fija" type="button">Ir</button><button id="siguiente-paralela-fija" type="button">Siguiente →</button><div id="estado-paralela-fija"></div>';
-    herramientas.insertAdjacentElement('afterend',b);
-    $('ir-paralela-fija').onclick=()=>buscarParalela($('campo-paralela-fija').value);
-    $('campo-paralela-fija').addEventListener('keydown',e=>{if(e.key==='Enter')buscarParalela(e.target.value);});
-    $('anterior-paralela-fija').onclick=()=>mover(-1);$('siguiente-paralela-fija').onclick=()=>mover(1);
+    herramientas.insertAdjacentElement('afterend',b);$('ir-paralela-fija').onclick=()=>buscarParalela($('campo-paralela-fija').value);$('campo-paralela-fija').addEventListener('keydown',e=>{if(e.key==='Enter')buscarParalela(e.target.value);});$('anterior-paralela-fija').onclick=()=>mover(-1);$('siguiente-paralela-fija').onclick=()=>mover(1);
   }
-
-  function actualizarModo(){
-    const b=$('navegacion-paralela-fija');if(!b)return;
-    const paralelo=document.body.classList.contains('modo-paralela');
-    b.hidden=!paralelo;
-    if(paralelo){const r=recursoPanel(paneles()[0]);if(r)$('campo-paralela-fija').value=r.nodos?.[r.actual]?.titulo||'';}
-    quitarBarraCita();
-  }
-
+  function actualizarModo(){const b=$('navegacion-paralela-fija');if(!b)return;const paralelo=document.body.classList.contains('modo-paralela');b.hidden=!paralelo;if(paralelo){const r=recursoPanel(paneles()[0]);if(r)$('campo-paralela-fija').value=r.nodos?.[r.actual]?.titulo||'';}quitarBarraCita();}
   function instalar(){
     fijarInterfaz();interceptarNormal();crearBarraParalela();actualizarModo();
-    const pn=$('paneles-paralelos');
-    if(pn&&!pn.dataset.mejorasObs){pn.dataset.mejorasObs='1';new MutationObserver(()=>{quitarBarraCita();if(document.body.classList.contains('modo-paralela'))actualizarReferencia();}).observe(pn,{childList:true,subtree:true});}
-    const vm=$('vista-paralela');vm?.addEventListener('click',()=>setTimeout(actualizarModo,30),true);
-    const vn=$('vista-normal');vn?.addEventListener('click',()=>setTimeout(actualizarModo,30),true);
+    const pn=$('paneles-paralelos');if(pn&&!pn.dataset.mejorasObs){pn.dataset.mejorasObs='1';new MutationObserver(()=>{quitarBarraCita();if(document.body.classList.contains('modo-paralela'))actualizarReferencia();}).observe(pn,{childList:true,subtree:true});}
+    const vm=$('vista-paralela');vm?.addEventListener('click',()=>setTimeout(actualizarModo,30),true);const vn=$('vista-normal');vn?.addEventListener('click',()=>setTimeout(actualizarModo,30),true);
+    // Carga el módulo T1/T2/T3 después del motor principal, sin alterar las funciones existentes.
+    if(!document.querySelector('script[data-titulos-t123]')){const s=document.createElement('script');s.src='assets/js/biblioteca-titulos.js?v=20260824-1';s.dataset.titulosT123='1';document.body.appendChild(s);}
   }
-
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',instalar,{once:true});else instalar();
 })();
