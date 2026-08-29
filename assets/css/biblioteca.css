@@ -53,9 +53,15 @@ button:hover { filter:brightness(1.08); } button:disabled { opacity:.45; cursor:
 .modal-cabecera { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; border-bottom:1px solid var(--linea); padding-bottom:.8rem; }
 .modal-cabecera h2 { margin:.1rem 0; font-size:1.35rem; }
 .modal-ayuda { color:#51635a; }
+.filtro-recursos-modal { margin:.65rem 0 .75rem; }
+.filtro-recursos-modal input { width:100%; border:1px solid var(--linea); border-radius:8px; padding:.62rem .7rem; background:#fff; color:var(--tinta); }
 .lista-recursos { display:grid; gap:.55rem; }
 .recurso-opcion { background:#f3f6f3; color:var(--tinta); text-align:left; border:1px solid var(--linea); display:flex; flex-direction:column; gap:.2rem; }
+.recurso-opcion[hidden] { display:none; }
 .recurso-opcion small { opacity:.7; font:.8rem Arial,sans-serif; }
+.selector-voz { display:flex; align-items:center; gap:.35rem; min-width:0; }
+.selector-voz span { font-size:.78rem; font-weight:700; white-space:nowrap; }
+.selector-voz select { max-width:245px; min-width:155px; border:1px solid var(--linea); border-radius:7px; padding:.48rem 1.8rem .48rem .55rem; background:#fff; color:var(--tinta); font-size:.82rem; }
 .busqueda-controles { display:grid; grid-template-columns:1fr auto auto; gap:.5rem; margin:1rem 0; }
 .busqueda-controles input,.busqueda-controles select { border:1px solid var(--linea); border-radius:8px; padding:.65rem; background:#fff; color:var(--tinta); min-width:0; }
 .resultados-busqueda { display:grid; gap:.6rem; }
@@ -71,4 +77,4 @@ button:hover { filter:brightness(1.08); } button:disabled { opacity:.45; cursor:
 .referencia-controles input { min-width:0; border:1px solid var(--linea); border-radius:8px; padding:.62rem .7rem; background:#fff; color:var(--tinta); }
 .referencia-biblica small { display:block; margin-top:.35rem; color:#718078; font-size:.76rem; }
 .versiculo-destacado { background:#e5efe9; border-radius:7px; padding:.35rem .55rem; outline:2px solid #b7d1c3; transition:background .2s; }
-@media (max-width:760px) { .barra-superior { flex-wrap:wrap; } .acciones-superiores { width:100%; justify-content:flex-end; } .pestanas { top:112px; } .aplicacion { display:block; } .indice { position:fixed; inset:116px 0 0 0; z-index:10; transform:translateX(-100%); transition:transform .2s; overflow:auto; height:auto; } .indice.abierto { transform:translateX(0); } .indice { box-shadow:4px 0 20px #0002; } .solo-movil { display:inline-block; } .lector { padding:1rem 1.1rem 2rem; } .herramientas { align-items:flex-start; } .audio { flex-wrap:wrap; } .busqueda-controles { grid-template-columns:1fr; } .referencia-controles { grid-template-columns:1fr; } .buscador-libros-controles { grid-template-columns:1fr; } }
+@media (max-width:760px) { .barra-superior { flex-wrap:wrap; } .acciones-superiores { width:100%; justify-content:flex-end; } .pestanas { top:112px; } .aplicacion { display:block; } .indice { position:fixed; inset:116px 0 0 0; z-index:10; transform:translateX(-100%); transition:transform .2s; overflow:auto; height:auto; } .indice.abierto { transform:translateX(0); } .indice { box-shadow:4px 0 20px #0002; } .solo-movil { display:inline-block; } .lector { padding:1rem 1.1rem 2rem; } .herramientas { align-items:flex-start; } .audio { flex-wrap:wrap; } .selector-voz { width:auto; } .selector-voz select { max-width:190px; min-width:120px; } .busqueda-controles { grid-template-columns:1fr; } .referencia-controles { grid-template-columns:1fr; } .buscador-libros-controles { grid-template-columns:1fr; } }
