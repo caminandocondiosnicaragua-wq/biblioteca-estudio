@@ -12,6 +12,14 @@
   function guardarPreferencia(valor){try{localStorage.setItem(STORAGE_KEY,valor);}catch(_){} }
   function etiquetaVoz(v){return `${v.name} — ${v.lang||'idioma desconocido'}`;}
 
+  function instalarEstiloMarcador(){
+    if($('estilo-voz-sincronizada'))return;
+    const estilo=document.createElement('style');
+    estilo.id='estilo-voz-sincronizada';
+    estilo.textContent='.palabra-voz-activa{background:#f4d35e!important;color:#183b32!important;border-radius:4px;padding:0 2px;box-shadow:0 0 0 1px #e0b83f;transition:background .08s ease;}';
+    document.head.append(estilo);
+  }
+
   function ordenarVoces(lista){
     const preferida=normalizar(cargarPreferencia());
     return [...lista].sort((a,b)=>{
@@ -63,34 +71,26 @@
     }else{select.disabled=true;select.innerHTML='<option>Voz no disponible</option>';}
   }
 
-  function detenerRelojMarcador(){
-    if(relojMarcador){clearInterval(relojMarcador);relojMarcador=null;}
-  }
+  function detenerRelojMarcador(){if(relojMarcador){clearInterval(relojMarcador);relojMarcador=null;}}
 
-  /* Algunas voces/navegadores no emiten onboundary. En ese caso hacemos un
-     seguimiento de respaldo para que el usuario siga teniendo una señal
-     visual. Si llegan eventos reales, el seguimiento real toma el control. */
   function iniciarMarcadorRespaldo(utterance,texto){
-    detenerRelojMarcador();
-    huboBoundary=false;
+    detenerRelojMarcador();huboBoundary=false;
     const inicio=performance.now()+700;
     const caracteresPorSegundo=14;
     relojMarcador=setInterval(()=>{
-      if(huboBoundary||!utterance||speechSynthesis.paused){return;}
+      if(huboBoundary||!utterance||speechSynthesis.paused)return;
       const transcurrido=Math.max(0,performance.now()-inicio);
-      const posicion=Math.min(texto.length-1,Math.floor(transcurrido/1000*caracteresPorSegundo*(utterance.rate||1)));
+      const posicion=Math.min(Math.max(0,texto.length-1),Math.floor(transcurrido/1000*caracteresPorSegundo*(utterance.rate||1)));
       if(typeof resaltarPorPosicion==='function')resaltarPorPosicion(posicion);
     },120);
   }
 
-  /* No reemplazamos Escuchar. Interceptamos únicamente speechSynthesis.speak()
-     para asignar la voz elegida a la misma utterance que crea biblioteca.js.
-     Así se conserva onboundary, el mapa de palabras y el marcador amarillo. */
   function instalarIntegracion(){
     if(!('speechSynthesis'in window)||speakOriginal)return;
     speakOriginal=speechSynthesis.speak.bind(speechSynthesis);
     speechSynthesis.speak=function(utterance){
       try{
+        instalarEstiloMarcador();
         const voz=vozSeleccionada();
         if(voz){utterance.voice=voz;utterance.lang=voz.lang||utterance.lang||'es-ES';}
         const texto=String(utterance?.text||'');
@@ -110,6 +110,6 @@
     };
   }
 
-  function iniciar(){instalarSelector();instalarIntegracion();}
+  function iniciar(){instalarEstiloMarcador();instalarSelector();instalarIntegracion();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',iniciar,{once:true});else iniciar();
 })();
