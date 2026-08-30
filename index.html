@@ -27,8 +27,12 @@
       <nav id="lista-indice"></nav>
     </aside>
     <section class="lector" aria-live="polite">
-      <div class="herramientas"><div class="tamano" aria-label="Tamaño de letra"><span>Texto</span><button id="disminuir" aria-label="Disminuir tamaño de letra">A−</button><button id="aumentar" aria-label="Aumentar tamaño de letra">A+</button></div><div class="audio"><button id="escuchar">▶ Escuchar</button><button id="pausar" disabled>⏸ Pausar</button><button id="detener" disabled>■ Detener</button><label class="selector-voz" for="selector-voz" title="Voz para lectura en voz alta"><span>Voz</span><select id="selector-voz" aria-label="Seleccionar voz"></select></label></div></div>
-      <p id="estado" class="estado"></p><article id="contenido" class="contenido"></article><div class="navegacion"><button id="anterior" class="secundario">← Anterior</button><button id="siguiente">Siguiente →</button></div>
+      <div class="herramientas">
+        <div class="tamano" aria-label="Tamaño de letra"><span>Texto</span><button id="disminuir" aria-label="Disminuir tamaño de letra">A−</button><button id="aumentar" aria-label="Aumentar tamaño de letra">A+</button></div>
+        <div class="audio"><button id="escuchar">▶ Escuchar</button><button id="pausar" disabled>⏸ Pausar</button><button id="detener" disabled>■ Detener</button><label class="selector-voz" for="selector-voz" title="Voz para lectura en voz alta"><span>Voz</span><select id="selector-voz" aria-label="Seleccionar voz"></select></label></div>
+      </div>
+      <p id="estado" class="estado"></p><article id="contenido" class="contenido"></article>
+      <div class="navegacion"><button id="anterior" class="secundario">← Anterior</button><button id="siguiente">Siguiente →</button></div>
     </section>
   </main>
   <div id="modal-recursos" class="modal" hidden><div class="modal-caja" role="dialog" aria-modal="true" aria-labelledby="titulo-recursos"><div class="modal-cabecera"><div><p class="marca">MI BIBLIOTECA</p><h2 id="titulo-recursos">Agregar recurso</h2></div><button id="cerrar-recursos" class="secundario" aria-label="Cerrar">×</button></div><p class="modal-ayuda">Elige un libro, Biblia, diccionario o léxico. Se abrirá como una nueva pestaña de estudio.</p><div class="filtro-recursos-modal"><input id="buscar-recurso-modal" type="search" placeholder="Buscar recurso por nombre..." autocomplete="off" aria-label="Buscar recurso por nombre"></div><div id="lista-recursos" class="lista-recursos"></div></div></div>
