@@ -11,8 +11,6 @@
     const s=document.createElement('style');s.id='estilos-ajustes-biblioteca';
     s.textContent=`
       .buscador-libros-biblico{display:block!important}.buscador-libros-biblico[hidden]{display:none!important}
-      .buscador-recursos-ajuste{display:grid;grid-template-columns:1fr;gap:.45rem;margin:.7rem 0 1rem}
-      .buscador-recursos-ajuste input{width:100%;box-sizing:border-box;border:1px solid #d7ddd7;border-radius:8px;padding:.65rem .7rem;background:#fff;color:#1d2a25}
       .resultado-recurso-oculto{display:none!important}
       /* Las ventanas de consulta quedan por delante del lector y de la barra flotante. */
       .modal{z-index:200!important}
@@ -23,23 +21,10 @@
 
   function crearBuscadorRecursos(lista,recursos){
     const modal=lista.closest('.modal');
-    let wrap=modal?.querySelector('.buscador-recursos-ajuste');
-    let input=wrap?.querySelector('input');
+    const input=modal?.querySelector('#buscar-recurso-modal');
+    if(!input)return null;
 
-    /* Un solo buscador reutilizable: nunca se crea otro al volver a abrir el modal. */
-    if(!wrap){
-      wrap=document.createElement('div');
-      wrap.className='buscador-recursos-ajuste';
-      lista.parentElement.insertBefore(wrap,lista);
-    }
-    if(!input){
-      input=document.createElement('input');
-      input.type='search';
-      input.placeholder='Buscar recurso por nombre...';
-      input.autocomplete='off';
-      wrap.append(input);
-    }
-
+    /* El buscador ya existe en index.html. No se crea ningún textbox adicional. */
     input.value='';
     input.oninput=()=>{
       const q=normalizar(input.value);
@@ -71,7 +56,7 @@
         b.innerHTML=`<strong>${escapeHtml(r.titulo)}</strong><small>${escapeHtml(r.tipo)} · ${escapeHtml(r.path)}</small>`;
         b.onclick=()=>abrirRecurso(r);lista.append(b);
       });
-      input.focus();
+      input?.focus();
     }).catch(e=>{console.error(e);lista.textContent='No se pudieron listar los recursos. Revisa los permisos de Storage.';});
   }
 
