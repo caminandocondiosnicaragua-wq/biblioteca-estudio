@@ -46,7 +46,6 @@ button:hover { filter:brightness(1.08); } button:disabled { opacity:.45; cursor:
 .pestanas { min-height:42px; background:#eef2ee; border-bottom:1px solid var(--linea); display:flex; gap:.25rem; align-items:end; padding:.3rem .8rem 0; overflow-x:auto; position:sticky; top:74px; z-index:4; }
 .pestana { display:flex; align-items:center; gap:.7rem; white-space:nowrap; border-radius:8px 8px 0 0; background:#dfe7e1; color:var(--tinta); padding:.55rem .8rem; font:600 .88rem Arial,sans-serif; }
 .pestana.activa { background:#fff; color:var(--verde); border:1px solid var(--linea); border-bottom:0; }
-.pestana b { font-size:1rem; }
 .modal { position:fixed; inset:0; background:#14231e66; z-index:20; display:grid; place-items:center; padding:1rem; }
 .modal[hidden] { display:none; }
 .modal-caja { background:#fff; border-radius:14px; box-shadow:0 15px 50px #0004; width:min(760px,100%); max-height:85vh; overflow:auto; padding:1.2rem; }
@@ -77,4 +76,20 @@ button:hover { filter:brightness(1.08); } button:disabled { opacity:.45; cursor:
 .referencia-controles input { min-width:0; border:1px solid var(--linea); border-radius:8px; padding:.62rem .7rem; background:#fff; color:var(--tinta); }
 .referencia-biblica small { display:block; margin-top:.35rem; color:#718078; font-size:.76rem; }
 .versiculo-destacado { background:#e5efe9; border-radius:7px; padding:.35rem .55rem; outline:2px solid #b7d1c3; transition:background .2s; }
-@media (max-width:760px) { .barra-superior { flex-wrap:wrap; } .acciones-superiores { width:100%; justify-content:flex-end; } .pestanas { top:112px; } .aplicacion { display:block; } .indice { position:fixed; inset:116px 0 0 0; z-index:10; transform:translateX(-100%); transition:transform .2s; overflow:auto; height:auto; } .indice.abierto { transform:translateX(0); } .indice { box-shadow:4px 0 20px #0002; } .solo-movil { display:inline-block; } .lector { padding:1rem 1.1rem 2rem; } .herramientas { align-items:flex-start; } .audio { flex-wrap:wrap; } .selector-voz { width:auto; } .selector-voz select { max-width:190px; min-width:120px; } .busqueda-controles { grid-template-columns:1fr; } .referencia-controles { grid-template-columns:1fr; } .buscador-libros-controles { grid-template-columns:1fr; } }
+
+/* Visor de imágenes: permite seleccionar cualquier figura del libro y verla ampliada. */
+.imagen-libro img { cursor:zoom-in; }
+.imagen-libro img:focus { outline:3px solid #8ab09e; outline-offset:3px; }
+.viso-imagen-biblioteca { position:fixed; inset:0; z-index:100; }
+.visor-imagen-biblioteca { position:fixed; inset:0; z-index:100; background:rgba(10,18,15,.88); display:grid; grid-template-rows:auto 1fr; }
+.visor-imagen-biblioteca[hidden] { display:none; }
+.visor-imagen-fondo { position:absolute; inset:0; }
+.visor-imagen-panel { position:relative; z-index:1; width:100%; height:100%; display:grid; grid-template-rows:auto 1fr; min-height:0; }
+.visor-imagen-barra { min-height:58px; display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:.65rem 1rem; background:rgba(255,255,255,.96); border-bottom:1px solid var(--linea); font-family:Arial,sans-serif; }
+.visor-imagen-titulo { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--tinta); font-size:.88rem; }
+.visor-imagen-acciones { display:flex; gap:.35rem; flex-shrink:0; }
+.visor-imagen-acciones button { min-width:42px; padding:.5rem .65rem; }
+.visor-imagen-area { position:relative; z-index:1; min-height:0; overflow:auto; display:grid; place-items:center; padding:1.5rem; }
+.visor-imagen-area img { display:block; max-width:none; max-height:none; width:auto; height:auto; object-fit:contain; box-shadow:0 8px 35px rgba(0,0,0,.35); transition:transform .15s ease; }
+body.imagen-visor-abierto { overflow:hidden; }
+@media (max-width:760px) { .barra-superior { flex-wrap:wrap; } .acciones-superiores { width:100%; justify-content:flex-end; } .pestanas { top:112px; } .aplicacion { display:block; } .indice { position:fixed; inset:116px 0 0 0; z-index:10; transform:translateX(-100%); transition:transform .2s; overflow:auto; height:auto; } .indice.abierto { transform:translateX(0); } .indice { box-shadow:4px 0 20px #0002; } .solo-movil { display:inline-block; } .lector { padding:1rem 1.1rem 2rem; } .herramientas { align-items:flex-start; } .audio { flex-wrap:wrap; } .selector-voz { width:auto; } .selector-voz select { max-width:190px; min-width:120px; } .busqueda-controles { grid-template-columns:1fr; } .referencia-controles { grid-template-columns:1fr; } .buscador-libros-controles { grid-template-columns:1fr; } .visor-imagen-barra { align-items:flex-start; } .visor-imagen-area { padding:.75rem; } .visor-imagen-acciones { flex-wrap:wrap; justify-content:flex-end; } }
