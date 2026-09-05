@@ -19,34 +19,35 @@
     return recurso?.path ? String(recurso.path).split('/').slice(0, -1) : [];
   }
 
+  function agregarCandidato(candidatos, valor) {
+    if (!valor) return;
+    if (typeof valor === 'string') {
+      const v = valor.trim();
+      if (v) candidatos.push(v.startsWith('data:') || /^https?:\/\//i.test(v) ? v : normalizarRuta(v));
+      return;
+    }
+    if (typeof valor === 'object') {
+      ['archivo','path','url','src','ruta','archivo_imagen','imagen','image','data_url','dataUrl','base64','imagen_base64','image_base64'].forEach(k => {
+        if (valor[k]) agregarCandidato(candidatos, valor[k]);
+      });
+    }
+  }
+
   function candidatosImagen(block) {
     const candidatos = [];
-    const agregar = valor => {
-      if (!valor) return;
-      if (typeof valor === 'string') {
-        candidatos.push(normalizarRuta(valor));
-        return;
-      }
-      if (typeof valor === 'object') {
-        agregar(valor.archivo);
-        agregar(valor.path);
-        agregar(valor.url);
-        agregar(valor.src);
-        agregar(valor.ruta);
-      }
-    };
 
-    agregar(block.archivo);
-    agregar(block.path);
-    agregar(block.url);
-    agregar(block.src);
-    agregar(block.ruta);
-    (block.imagenes || []).forEach(agregar);
+    ['archivo','path','url','src','ruta','archivo_imagen','imagen','image','data_url','dataUrl','base64','imagen_base64','image_base64'].forEach(k => {
+      if (block?.[k]) agregarCandidato(candidatos, block[k]);
+    });
+
+    (block?.imagenes || []).forEach(v => agregarCandidato(candidatos, v));
+    if (block?.recurso) agregarCandidato(candidatos, block.recurso);
 
     const base = rutaBaseRecurso();
     const originales = [...candidatos];
 
     originales.forEach(ruta => {
+      if (/^(data:|https?:\/\/)/i.test(ruta)) return;
       if (ruta.startsWith('imagenes/')) {
         if (base.length) candidatos.push([...base, ruta].join('/'));
       } else if (base.length && !ruta.includes('/')) {
@@ -57,23 +58,35 @@
     return [...new Set(candidatos.filter(Boolean))];
   }
 
+  function esFuenteDirecta(ruta) {
+    return /^(data:|https?:\/\/)/i.test(String(ruta || ''));
+  }
+
   async function cargarImagen(block) {
     const candidatos = candidatosImagen(block);
     const clave = candidatos.join('|');
-    if (!clave) throw new Error('El bloque de imagen no contiene archivo o ruta.');
+    if (!clave) throw new Error('El bloque de imagen no contiene archivo, ruta o fuente.');
     if (cacheImagenes.has(clave)) return cacheImagenes.get(clave);
     if (promesasImagenes.has(clave)) return promesasImagenes.get(clave);
 
     const promesa = (async () => {
       for (const ruta of candidatos) {
         try {
+          if (esFuenteDirecta(ruta)) {
+            const resultado = { url: ruta, ruta };
+            cacheImagenes.set(clave, resultado);
+            return resultado;
+          }
+
           const { data, error } = await clienteSupabase.storage
             .from(SUPABASE_BUCKET)
             .download(ruta);
           if (error || !data) continue;
+
           const url = URL.createObjectURL(data);
-          cacheImagenes.set(clave, url);
-          return { url, ruta };
+          const resultado = { url, ruta, blob: data };
+          cacheImagenes.set(clave, resultado);
+          return resultado;
         } catch (_) {}
       }
       throw new Error(`No se encontró la imagen: ${candidatos[0]}`);
@@ -87,6 +100,43 @@
     }
   }
 
+  function cerrarVisorImagen() {
+    const modal = document.getElementById('visor-imagen-libro');
+    if (modal) modal.hidden = true;
+    document.body.classList.remove('visor-imagen-abierto');
+  }
+
+  function abrirVisorImagen(src, alt) {
+    let modal = document.getElementById('visor-imagen-libro');
+
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'visor-imagen-libro';
+      modal.className = 'visor-imagen-libro';
+      modal.hidden = true;
+      modal.innerHTML = `
+        <div class="visor-imagen-fondo" data-cerrar-visor="1"></div>
+        <div class="visor-imagen-caja" role="dialog" aria-modal="true" aria-label="Imagen ampliada">
+          <button type="button" class="visor-imagen-cerrar" aria-label="Cerrar imagen">×</button>
+          <img class="visor-imagen-ampliada" alt="">
+        </div>`;
+
+      modal.querySelector('.visor-imagen-cerrar').addEventListener('click', cerrarVisorImagen);
+      modal.querySelector('[data-cerrar-visor]').addEventListener('click', cerrarVisorImagen);
+      document.body.append(modal);
+    }
+
+    const img = modal.querySelector('.visor-imagen-ampliada');
+    img.src = src;
+    img.alt = String(alt || 'Imagen del libro');
+    modal.hidden = false;
+    document.body.classList.add('visor-imagen-abierto');
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') cerrarVisorImagen();
+  });
+
   function renderizarImagen(block, destino) {
     const figure = document.createElement('figure');
     figure.className = 'imagen-libro';
@@ -97,6 +147,10 @@
     img.alt = String(block.alt || block.descripcion || block.titulo || 'Imagen del libro');
     img.loading = 'lazy';
     img.decoding = 'async';
+    img.tabIndex = 0;
+    img.title = 'Haga clic para ampliar';
+    img.setAttribute('role', 'button');
+    img.setAttribute('aria-label', `${img.alt}. Haga clic para ampliar.`);
 
     const metadato = block.imagenes?.[0] || block;
     if (Number(metadato.ancho) > 0) img.dataset.anchoOriginal = String(metadato.ancho);
@@ -108,10 +162,22 @@
     figure.append(cargando, img);
     destino.append(figure);
 
+    const ampliar = () => {
+      if (img.src) abrirVisorImagen(img.src, img.alt);
+    };
+    img.addEventListener('click', ampliar);
+    img.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        ampliar();
+      }
+    });
+
     cargarImagen(block).then(({ url }) => {
       img.src = url;
       cargando.remove();
-    }).catch(() => {
+    }).catch(error => {
+      console.warn('Imagen del JSON:', error);
       cargando.textContent = 'No se pudo cargar esta imagen del libro.';
       cargando.className = 'imagen-libro-error';
       img.remove();
@@ -227,6 +293,12 @@
       margin: 0 auto;
       object-fit: contain;
       border-radius: 4px;
+      cursor: zoom-in;
+      outline: none;
+    }
+    .imagen-libro img:focus-visible {
+      outline: 3px solid #315c4b;
+      outline-offset: 4px;
     }
     .imagen-libro-cargando {
       min-height: 3rem;
@@ -261,12 +333,64 @@
     .tabla-libro-contenedor .tabla-libro td {
       white-space: pre-wrap;
     }
+    .visor-imagen-libro {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: grid;
+      place-items: center;
+      padding: 1.5rem;
+    }
+    .visor-imagen-libro[hidden] { display: none; }
+    .visor-imagen-fondo {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,.82);
+      cursor: zoom-out;
+    }
+    .visor-imagen-caja {
+      position: relative;
+      z-index: 1;
+      width: min(96vw, 1400px);
+      height: min(94vh, 1000px);
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+    }
+    .visor-imagen-ampliada {
+      pointer-events: auto;
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      box-shadow: 0 12px 45px rgba(0,0,0,.45);
+      background: white;
+    }
+    .visor-imagen-cerrar {
+      position: absolute;
+      z-index: 2;
+      top: .25rem;
+      right: .25rem;
+      width: 2.5rem;
+      height: 2.5rem;
+      border: 0;
+      border-radius: 50%;
+      background: rgba(255,255,255,.94);
+      color: #1d332a;
+      font-size: 1.8rem;
+      line-height: 1;
+      cursor: pointer;
+      pointer-events: auto;
+    }
     @media (max-width: 760px) {
       .imagen-libro img { max-height: none; }
       .tabla-libro-contenedor {
         margin-left: -.25rem;
         width: calc(100% + .5rem);
       }
+      .visor-imagen-libro { padding: .5rem; }
+      .visor-imagen-caja { width: 100vw; height: 100vh; }
     }
   `;
   document.head.append(style);
