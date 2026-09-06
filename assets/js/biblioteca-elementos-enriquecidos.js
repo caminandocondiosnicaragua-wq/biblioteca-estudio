@@ -182,7 +182,18 @@
     let lista=null,offset=inicioVoz;
     (contenido||[]).forEach(block=>{
       if(!block)return;
-      const tipo=String(block.tipo||block.type||'').toLowerCase(),texto=block.texto||block.text||'';
+      const tipo=String(block.tipo||block.type||block.kind||'').toLowerCase(),texto=block.texto||block.text||'';
+
+      // En este JSON las imágenes están asociadas a párrafos vacíos.
+      // Deben ocupar exactamente ese punto del flujo; “Figura 1” sigue siendo texto independiente.
+      if(block.imagenes){
+        lista=null;
+        const imagenes=Array.isArray(block.imagenes)?block.imagenes:[block.imagenes];
+        imagenes.forEach(imagen=>renderizarImagen({...block,imagenes:[imagen]},destino));
+        offset+=String(texto).length+2;
+        return;
+      }
+
       if(tipo==='tabla'||tipo==='table'){lista=null;renderizarTabla(block,destino);return;}
       if(esImagen(block)){lista=null;renderizarImagen(block,destino);return;}
       if(tipo==='elemento_lista'||tipo==='list_item'){if(!lista){lista=document.createElement('ul');lista.className='lista';destino.append(lista);}const li=document.createElement('li');li.append(crearFragmentos({...block,texto},offset));lista.append(li);offset+=String(texto).length+2;return;}
